@@ -59,12 +59,12 @@ class ProgressWindow(QDialog):
         super().open()
 
 
-    def closeEvent(event):
+    def closeEvent(self, event):
 
         event.ignore()
 
 
-    def keyPressEvent(event):
+    def keyPressEvent(self, event):
 
         # Disables key events
         pass
