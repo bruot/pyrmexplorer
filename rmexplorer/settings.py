@@ -31,6 +31,7 @@ from PyQt5.QtCore import QSettings, QStandardPaths, QCoreApplication
 
 from tools import Version
 from _version import __version__
+import migrations
 
 
 class Settings(object):
@@ -40,18 +41,36 @@ class Settings(object):
         self._settings = QSettings(QCoreApplication.applicationName(),
                                    QCoreApplication.organizationName())
 
+        # Expose directly some methods of _settings
+        self.value = self._settings.value
+        self.setValue = self._settings.setValue
+        self.sync = self._settings.sync
+
         # Load settings or set default parameters.  Keys are case-insensitive.
         #
         # Special treatment for _version
         if not self._settings.contains('version'):
             self._settings.setValue('version', __version__)
-        elif Version(self._settings.value('version')) > Version(__version__):
-            # Program older than settings: force the user to upgrade.
-            raise Exception("Program (%s) is older than settings version (%s). Use rmExplorer's latest version." % (__version__,
-                                                                                                                    self._settings.value('version')))
-        elif Version(self._settings.value('version')) < Version(__version__):
-            # Program newer than settings.  Settings migrations go here.
-            pass
+        else:
+            settings_ver = Version(self._settings.value('version'))
+            if settings_ver > Version(__version__):
+                # Program older than settings: force the user to upgrade.
+                raise Exception("Program version %s is lower than settings version (%s). Use rmExplorer's latest version." % (__version__,
+                                                                                                                              self._settings.value('version')))
+            else:
+                # Program may be newer than settings.  Settings migrations go
+                # here.
+                #
+                # Make sure version is updated in each migration.
+                if settings_ver < Version('1.1.0'):
+                    migrations.settings_new_timeouts(self)
+
+        self._set_defaults()
+
+
+    def _set_defaults(self):
+        """Set settings default values for fields that do not already exist"""
+
         # Hidden settings
         self._get_or_set('lastDir',
                           QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation))
@@ -60,13 +79,9 @@ class Settings(object):
         # Settings on the Settings dialog
         self._get_or_set('downloadURL', 'http://10.11.99.1/download/%s/placeholder')
         self._get_or_set('listFolderURL', 'http://10.11.99.1/documents/%s')
-        self._get_or_set('HTTPTimeout', 10)
+        self._get_or_set('HTTPTimeout', 60)
+        self._get_or_set('HTTPShortTimeout', 0.5)
         self._get_or_set('PNGResolution', 360)
-
-        # Expose directly some methods of _settings
-        self.value = self._settings.value
-        self.setValue = self._settings.setValue
-        self.sync = self._settings.sync
 
 
     def _get_or_set(self, key, defaultValue):
