@@ -63,7 +63,9 @@ class SettingsDialog(OKCancelDialog):
                                                               constants.HttpShortTimeoutMaxDecimals,
                                                               self))
         self.pngResolutionLE = QLineEdit(str(self.settings.value('PNGResolution', type=int)), self)
-        self.pngResolutionLE.setValidator(QIntValidator(36, 4800, self))
+        self.pngResolutionLE.setValidator(QIntValidator(constants.PngExportDpiMin,
+                                                        constants.PngExportDpiMax,
+                                                        self))
         miscLayout = QGridLayout()
         miscLayout.addWidget(QLabel('HTTP timeout (s):'), 0, 0)
         miscLayout.addWidget(self.httpTimeoutLE, 0, 1)
@@ -86,18 +88,46 @@ class SettingsDialog(OKCancelDialog):
     def ok(self):
         # Validate fields
         msgBox = QMessageBox(self)
+        if self.listFolderUrlLE.text() == '':
+            msgBox.setText("List folder URL cannot be empty.")
+            msgBox.exec()
+            return
+        elif not '%s' in self.listFolderUrlLE.text():
+            msgBox.setText("List folder URL must contain a \"%s\" placeholder.")
+            msgBox.exec()
+            return
+        #
+        if self.downloadUrlLE.text() == '':
+            msgBox.setText("Download URL cannot be empty.")
+            msgBox.exec()
+            return
+        elif not '%s' in self.downloadUrlLE.text():
+            msgBox.setText("Download URL must contain a \"%s\" placeholder.")
+            msgBox.exec()
+            return
+        #
+        pos = self.pngResolutionLE.cursorPosition()
+        if self.pngResolutionLE.validator().validate(self.pngResolutionLE.text(), pos)[0] != QValidator.Acceptable:
+            msgBox.setText("PNG resolution outside integer range (%d-%d)." % (constants.PngExportDpiMin,
+                                                                              constants.PngExportDpiMax))
+            msgBox.exec()
+            return
+        #
         pos = self.httpTimeoutLE.cursorPosition()
         if self.httpTimeoutLE.validator().validate(self.httpTimeoutLE.text(), pos)[0] != QValidator.Acceptable:
-            msgBox.setText("HTTP timeout outside integer range (%d-%d)" % (constants.HttpTimeoutMin,
-                                                                           constants.HttpTimeoutMax))
+            msgBox.setText("HTTP timeout outside integer range (%d-%d)." % (constants.HttpTimeoutMin,
+                                                                            constants.HttpTimeoutMax))
             msgBox.exec()
             return
+        #
         pos = self.httpShortTimeoutLE.cursorPosition()
         if self.httpShortTimeoutLE.validator().validate(self.httpShortTimeoutLE.text(), pos)[0] != QValidator.Acceptable:
-            msgBox.setText("HTTP short timeout outside range (%f-%f)" % (constants.HttpShortTimeoutMin,
-                                                                         constants.HttpShortTimeoutMax))
+            msgBox.setText("HTTP short timeout outside range (%f-%f)." % (constants.HttpShortTimeoutMin,
+                                                                          constants.HttpShortTimeoutMax))
             msgBox.exec()
             return
+
+        # All validations succeeded
         super().ok()
 
 

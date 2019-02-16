@@ -30,3 +30,5 @@ HttpTimeoutMax = 999
 HttpShortTimeoutMin = 0
 HttpShortTimeoutMax = 60
 HttpShortTimeoutMaxDecimals = 3
+PngExportDpiMin = 30
+PngExportDpiMax = 10000
