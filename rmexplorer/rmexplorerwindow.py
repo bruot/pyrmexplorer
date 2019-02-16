@@ -33,8 +33,8 @@ import urllib.error
 
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtWidgets import (qApp, QWidget, QMainWindow, QMenu, QAction,
-                             QLabel, QListWidget, QGridLayout, QDialog,
-                             QFileDialog, QMessageBox)
+                             QLabel, QListWidget, QGridLayout, QVBoxLayout,
+                             QDialog, QFileDialog, QMessageBox)
 
 from _version import __version__
 from saveoptsdialog import SaveOptsDialog
@@ -65,21 +65,30 @@ class RmExplorerWindow(QMainWindow):
         self.filesList = QListWidget(self)
         self.filesList.itemDoubleClicked.connect(self.filesListItemDoubleClicked)
 
-        mainLayout = QGridLayout()
-        mainLayout.addWidget(QLabel('Folders:'), 0, 0)
-        mainLayout.addWidget(QLabel('Files:'), 0, 1)
-        mainLayout.addWidget(self.dirsList, 1, 0)
-        mainLayout.addWidget(self.filesList, 1, 1)
+        self.curDirLabel = QLabel(self)
+
+        browserLayout = QGridLayout()
+        browserLayout.addWidget(QLabel('Folders:'), 0, 0)
+        browserLayout.addWidget(QLabel('Files:'), 0, 1)
+        browserLayout.addWidget(self.dirsList, 1, 0)
+        browserLayout.addWidget(self.filesList, 1, 1)
+
+        mainLayout = QVBoxLayout()
+        mainLayout.addLayout(browserLayout)
+        mainLayout.addWidget(self.curDirLabel)
 
         centralWidget = QWidget(self)
         centralWidget.setLayout(mainLayout)
         self.setCentralWidget(centralWidget)
 
         self.curDir = ''
+        self.curDirName = ''
         self.curDirParents = []
+        self.curDirParentsNames = []
         self.dirIds = []
+        self.dirNames = []
         self.fileIds = []
-        self.goToDir('')
+        self.goToDir('', '')
 
         self.currentWarning = ''
 
@@ -150,7 +159,7 @@ class RmExplorerWindow(QMainWindow):
         downloadDirAct.triggered.connect(self.downloadDirClicked)
 
 
-    def goToDir(self, dirId):
+    def goToDir(self, dirId, dirName):
 
         url = self.settings.value('listFolderURL', type=str) % dirId
         try:
@@ -168,11 +177,19 @@ class RmExplorerWindow(QMainWindow):
             # We are either moving up or down one level
             if len(self.curDirParents) == 0 or self.curDirParents[-1] != dirId:
                 # Moving down
-                self.curDirParents += [self.curDir]
+                self.curDirParents.append(self.curDir)
+                self.curDirParentsNames.append(self.curDirName)
             else:
                 # Moving up
                 self.curDirParents.pop()
+                self.curDirParentsNames.pop()
             self.curDir = dirId
+            self.curDirName = dirName
+        if self.curDirParents:
+            path = '%s/%s' % ('/'.join(self.curDirParentsNames), self.curDirName)
+        else:
+            path = '/'
+        self.curDirLabel.setText(path)
 
         # Update dirsList and filesList
         self.dirsList.clear()
@@ -180,18 +197,23 @@ class RmExplorerWindow(QMainWindow):
 
         if dirId != '':
             self.dirIds = [self.curDirParents[-1]]
+            self.dirNames = [self.curDirParentsNames[-1]]
             self.dirsList.addItem('..')
         else:
             self.dirIds = []
+            self.dirNames = []
         self.fileIds = []
 
         for elem in data:
+            id_ = elem['ID']
+            name = elem['VissibleName'] # yes, "Vissible"
             if elem['Type'] == 'CollectionType':
-                self.dirIds.append(elem['ID'])
-                self.dirsList.addItem(elem['VissibleName']) # yes, "Vissible"
+                self.dirIds.append(id_)
+                self.dirNames.append(name)
+                self.dirsList.addItem(name)
             elif elem['Type'] == 'DocumentType':
-                self.fileIds.append(elem['ID'])
-                self.filesList.addItem(elem['VissibleName'])
+                self.fileIds.append(id_)
+                self.filesList.addItem(name)
 
 
     def downloadFile(self, basePath, fileDesc, mode):
@@ -279,13 +301,13 @@ class RmExplorerWindow(QMainWindow):
 
     def refreshLists(self):
 
-        self.goToDir(self.curDir)
+        self.goToDir(self.curDir, self.curDirName)
 
 
     def dirsListItemDoubleClicked(self, item):
 
-        dirId = self.dirIds[self.dirsList.currentRow()]
-        self.goToDir(dirId)
+        idx = self.dirsList.currentRow()
+        self.goToDir(self.dirIds[idx], self.dirNames[idx])
 
 
     def dirsListContextMenuRequested(self, pos):
@@ -322,9 +344,8 @@ class RmExplorerWindow(QMainWindow):
 
     def downloadDirClicked(self):
 
-        dirId = self.dirIds[self.dirsList.currentRow()]
-        dirName = self.dirsList.selectedItems()[0].text()
-        self.downloadDir(dirId, dirName)
+        idx = self.dirsList.currentRow()
+        self.downloadDir(self.dirIds[idx], self.dirNames[idx])
 
 
     def downloadAll(self):
