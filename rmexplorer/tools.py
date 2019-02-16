@@ -27,6 +27,7 @@
 
 import os
 import io
+import socket
 import functools
 import urllib.request
 import wand.image
@@ -59,7 +60,9 @@ def downloadFile(fid, basePath, destRelPath, mode, settings):
     url = settings.value('downloadURL', type=str) % fid
     if not os.path.isdir(parts[0]):
         os.makedirs(parts[0])
+    socket.setdefaulttimeout(settings.value('HTTPTimeout', type=int))
     data = urllib.request.urlopen(url).read() # PDF data
+    socket.setdefaulttimeout(settings.value('HTTPShortTimeout', type=float))
     if mode == 'pdf':
         with open(destPath, 'bw') as f:
             f.write(data)

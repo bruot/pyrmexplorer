@@ -97,7 +97,7 @@ class RmExplorerWindow(QMainWindow):
     def updateFromSettings(self):
         """Call this whenever settings are changed"""
 
-        socket.setdefaulttimeout(self.settings.value('HTTPTimeout', type=int))
+        socket.setdefaulttimeout(self.settings.value('HTTPShortTimeout', type=float))
 
 
     def makeMenus(self):
