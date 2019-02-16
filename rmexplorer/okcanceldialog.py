@@ -37,7 +37,7 @@ class OKCancelDialog(QDialog):
         self.okButton = QPushButton('OK', self)
         self.cancelButton = QPushButton('Cancel', self)
 
-        self.okButton.clicked.connect(self.accept)
+        self.okButton.clicked.connect(self.ok)
         self.cancelButton.clicked.connect(self.reject)
 
 
@@ -55,3 +55,7 @@ class OKCancelDialog(QDialog):
         mainLayout.addLayout(buttonsLayout)
 
         super().setLayout(mainLayout)
+
+
+    def ok(self):
+        self.accept()

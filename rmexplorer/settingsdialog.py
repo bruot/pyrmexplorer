@@ -26,10 +26,11 @@
 
 
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QGroupBox,
-                             QGridLayout, QVBoxLayout)
-from PyQt5.QtGui import QIntValidator
+                             QGridLayout, QVBoxLayout, QMessageBox)
+from PyQt5.QtGui import QValidator, QIntValidator, QDoubleValidator
 
 from okcanceldialog import OKCancelDialog
+import constants
 
 
 class SettingsDialog(OKCancelDialog):
@@ -53,14 +54,23 @@ class SettingsDialog(OKCancelDialog):
 
         miscGroupBox = QGroupBox('Miscellaneous', self)
         self.httpTimeoutLE = QLineEdit(str(self.settings.value('HTTPTimeout', type=int)), self)
-        self.httpTimeoutLE.setValidator(QIntValidator(0, 999, self))
+        self.httpTimeoutLE.setValidator(QIntValidator(constants.HttpTimeoutMin,
+                                                      constants.HttpTimeoutMax,
+                                                      self))
+        self.httpShortTimeoutLE = QLineEdit(str(self.settings.value('HTTPShortTimeout', type=float)), self)
+        self.httpShortTimeoutLE.setValidator(QDoubleValidator(constants.HttpShortTimeoutMin,
+                                                              constants.HttpShortTimeoutMax,
+                                                              constants.HttpShortTimeoutMaxDecimals,
+                                                              self))
         self.pngResolutionLE = QLineEdit(str(self.settings.value('PNGResolution', type=int)), self)
         self.pngResolutionLE.setValidator(QIntValidator(36, 4800, self))
         miscLayout = QGridLayout()
         miscLayout.addWidget(QLabel('HTTP timeout (s):'), 0, 0)
         miscLayout.addWidget(self.httpTimeoutLE, 0, 1)
-        miscLayout.addWidget(QLabel('PNG export resolution (dpi):'), 1, 0)
-        miscLayout.addWidget(self.pngResolutionLE, 1, 1)
+        miscLayout.addWidget(QLabel('HTTP short timeout (s):'), 1, 0)
+        miscLayout.addWidget(self.httpShortTimeoutLE, 1, 1)
+        miscLayout.addWidget(QLabel('PNG export resolution (dpi):'), 2, 0)
+        miscLayout.addWidget(self.pngResolutionLE, 2, 1)
         miscGroupBox.setLayout(miscLayout)
 
         mainLayout = QVBoxLayout()
@@ -73,6 +83,24 @@ class SettingsDialog(OKCancelDialog):
         self.accepted.connect(self.updateSettings)
 
 
+    def ok(self):
+        # Validate fields
+        msgBox = QMessageBox(self)
+        pos = self.httpTimeoutLE.cursorPosition()
+        if self.httpTimeoutLE.validator().validate(self.httpTimeoutLE.text(), pos)[0] != QValidator.Acceptable:
+            msgBox.setText("HTTP timeout outside integer range (%d-%d)" % (constants.HttpTimeoutMin,
+                                                                           constants.HttpTimeoutMax))
+            msgBox.exec()
+            return
+        pos = self.httpShortTimeoutLE.cursorPosition()
+        if self.httpShortTimeoutLE.validator().validate(self.httpShortTimeoutLE.text(), pos)[0] != QValidator.Acceptable:
+            msgBox.setText("HTTP short timeout outside range (%f-%f)" % (constants.HttpShortTimeoutMin,
+                                                                         constants.HttpShortTimeoutMax))
+            msgBox.exec()
+            return
+        super().ok()
+
+
     def updateSettings(self):
 
         self.settings.setValue('listFolderURL',
@@ -81,5 +109,7 @@ class SettingsDialog(OKCancelDialog):
                                str(self.downloadUrlLE.text()))
         self.settings.setValue('HTTPTimeout',
                                int(self.httpTimeoutLE.text()))
+        self.settings.setValue('HTTPShortTimeout',
+                               float(self.httpShortTimeoutLE.text()))
         self.settings.setValue('PNGResolution',
                                int(self.pngResolutionLE.text()))
