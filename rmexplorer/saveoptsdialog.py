@@ -25,7 +25,7 @@
 """Qt dialog that presents saving options to the user"""
 
 
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QRadioButton
+from PyQt5.QtWidgets import QVBoxLayout, QRadioButton
 
 from okcanceldialog import OKCancelDialog
 

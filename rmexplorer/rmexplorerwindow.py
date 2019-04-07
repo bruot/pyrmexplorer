@@ -22,7 +22,7 @@
 # along with pyrmexplorer.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""rmExplorer main window"""
+"""rMExplorer main window"""
 
 
 import os
@@ -40,6 +40,7 @@ from _version import __version__
 from saveoptsdialog import SaveOptsDialog
 from settingsdialog import SettingsDialog
 from downloadfilesworker import DownloadFilesWorker
+from backupdocsworker import BackupDocsWorker
 from progresswindow import ProgressWindow
 from settings import Settings
 import tools
@@ -94,7 +95,10 @@ class RmExplorerWindow(QMainWindow):
 
         self.progressWindow = None
         self.downloadFilesWorker = None
+        self.backupDocsWorker = None
         self.taskThread = None
+
+        self._masterKey = None
 
         self.setWindowTitle('rMExplorer')
 
@@ -139,6 +143,14 @@ class RmExplorerWindow(QMainWindow):
         explorerMenu.addAction(refreshAct)
         explorerMenu.addAction(settingsAct)
         explorerMenu.addAction(exitAct)
+
+        # SSH menu
+        backupDocsAct = QAction('&Backup documents', self)
+        backupDocsAct.setStatusTip('Backup all notebooks, documents, ebooks and bookmarks to a folder on this computer.')
+        backupDocsAct.triggered.connect(self.backupDocs)
+        #
+        sshMenu = menubar.addMenu('&SSH')
+        sshMenu.addAction(backupDocsAct)
 
         # About menu
         aboutAct = QAction('rMExplorer', self)
@@ -295,6 +307,42 @@ class RmExplorerWindow(QMainWindow):
                 self.statusBar().showMessage('Cancelled.', 5000)
 
 
+    def backupDocs(self):
+
+        # Destination folder
+        defaultDir = (self.settings.value('lastSSHBackupDir', type=str)
+                      or self.settings.value('lastDir', type=str))
+        folder = QFileDialog.getExistingDirectory(self,
+                                                  'Save directory',
+                                                  defaultDir,
+                                                  QFileDialog.ShowDirsOnly
+                                                  | QFileDialog.DontResolveSymlinks)
+        if not folder:
+            self.statusBar().showMessage('Cancelled.', 5000)
+            return
+
+        self.settings.setValue('lastSSHBackupDir', os.path.split(folder)[0])
+
+        if not self.settings.unlockMasterKeyInteractive(self):
+            return
+
+        self.progressWindow = ProgressWindow(self, knownEndVal=False)
+        self.progressWindow.setWindowTitle("Downloading backup...")
+        self.progressWindow.open()
+
+        self.settings.sync()
+        self.currentWarning = ''
+        self.backupDocsWorker = BackupDocsWorker(folder, self.settings._masterKey)
+
+        self.taskThread = QThread()
+        self.backupDocsWorker.moveToThread(self.taskThread)
+        self.taskThread.started.connect(self.backupDocsWorker.start)
+        self.backupDocsWorker.notifyProgress.connect(self.progressWindow.updateStep)
+        self.backupDocsWorker.finished.connect(self.onBackupDocsFinished)
+        self.backupDocsWorker.warning.connect(self.warningRaised)
+        self.taskThread.start()
+
+
     #########
     # Slots #
     #########
@@ -387,6 +435,27 @@ class RmExplorerWindow(QMainWindow):
         if dialog.exec() == QDialog.Accepted:
             self.updateFromSettings()
             self.statusBar().showMessage('Settings updated.', 5000)
+
+
+    def onBackupDocsFinished(self):
+
+        self.progressWindow.hide()
+
+        self.taskThread.started.disconnect(self.backupDocsWorker.start)
+        self.backupDocsWorker.warning.disconnect(self.warningRaised)
+        self.backupDocsWorker.finished.disconnect(self.onBackupDocsFinished)
+
+        self.taskThread.quit()
+        self.backupDocsWorker.deleteLater()
+        self.taskThread.deleteLater()
+        self.taskThread.wait()
+
+        if self.currentWarning:
+            warningBox = QMessageBox(self)
+            warningBox.setText('Errors were encountered:\n%s' % self.currentWarning)
+            warningBox.setIcon(QMessageBox.Warning)
+            warningBox.exec()
+        self.statusBar().showMessage('Finished downloading backup.', 5000)
 
 
     def about(self):

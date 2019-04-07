@@ -25,16 +25,46 @@
 """Migration scripts"""
 
 
-def settings_new_timeouts(settings):
-    """Splits timeouts into two settings
+from PyQt5.QtCore import QStandardPaths
 
-    v1.1.0 migration.
+
+def settings_v1_1_0_migration(settings):
+    """Settings upgrade to v1.1.0
+
+    This includes:
+
+        - Splitting HTTP timeouts into two settings
+
+        - Adding master password feature
+
+        - SSH password storage
     """
 
     # Overwrite HTTPTimeout
     settings.setValue('HTTPTimeout', 60)
     # Add HTTPShortTimeout
     settings.setValue('HTTPShortTimeout', 0.5)
+
+    # Add master password feature
+    settings.setValue('KDF.Algorithm', '')
+    settings.setValue('KDF.Salt', '')
+    settings.setValue('KDF.Iterations', '')
+    settings.setValue('KDF.Hash', '')
+    settings.beginGroup('Encrypted')
+    settings.setValue('TestString.IV', '')
+    settings.setValue('TestString.CipherText', '')
+    settings.endGroup()
+
+    # Add SSH backup feature
+    settings.setValue('TabletHostname', '')
+    settings.setValue('SSHUsername', 'root')
+    settings.setValue('TabletDocumentsDir', '/home/root/.local/share/remarkable/xochitl')
+    settings.beginGroup('Encrypted')
+    settings.setValue('SSHPassword.IV', '')
+    settings.setValue('SSHPassword.CipherText', '')
+    settings.endGroup()
+    settings.setValue('lastSSHBackupDir',
+                      QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation))
 
     # Update version
     settings.setValue('version', '1.1.0')

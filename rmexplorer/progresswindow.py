@@ -31,12 +31,16 @@ from PyQt5.QtWidgets import QDialog, QProgressBar, QHBoxLayout
 
 class ProgressWindow(QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, knownEndVal=True):
 
         super().__init__(parent,
                          Qt.CustomizeWindowHint | Qt.WindowTitleHint)
 
         self.progressBar = QProgressBar(self)
+        self._knownEndVal = knownEndVal
+        if not knownEndVal:
+            # Display progress count instead of percentage
+            self.progressBar.setFormat('%v')
         self.progressBar.setMinimum(0)
 
         mainLayout = QHBoxLayout()
@@ -73,4 +77,6 @@ class ProgressWindow(QDialog):
     def updateStep(self, step):
 
         self.step = step
+        if not self._knownEndVal:
+            self.nSteps = step
         self.refresh()

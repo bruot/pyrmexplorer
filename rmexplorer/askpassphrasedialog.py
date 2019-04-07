@@ -22,18 +22,25 @@
 # along with pyrmexplorer.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""Constants for rMExplorer"""
+"""Qt dialog to ask for master passphrase"""
 
 
-MasterKeyLen = 32
-HttpTimeoutMin = 0
-HttpTimeoutMax = 999
-HttpShortTimeoutMin = 0
-HttpShortTimeoutMax = 60
-HttpShortTimeoutMaxDecimals = 3
-PngExportDpiMin = 30
-PngExportDpiMax = 10000
-PassphraseMinStrength = 0.7
-PassphraseMaxLen = 1024
-TestString = 'Can you read me?'
-SSHTimeout = 10.0
+from PyQt5.QtWidgets import QLabel, QLineEdit, QVBoxLayout
+
+from okcanceldialog import OKCancelDialog
+
+
+class AskPassphraseDialog(OKCancelDialog):
+
+    def __init__(self, parent=None):
+
+        super().__init__(parent=parent)
+
+        self.passphraseLE = QLineEdit(self)
+        self.passphraseLE.setEchoMode(QLineEdit.Password)
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(QLabel('Enter your rMExplorer passphrase:'))
+        mainLayout.addWidget(self.passphraseLE)
+        self.setLayout(mainLayout)
+
+        self.setWindowTitle('rMExplorer passphrase')

@@ -25,11 +25,13 @@
 """Qt dialog to edit settings"""
 
 
-from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QGroupBox,
-                             QGridLayout, QVBoxLayout, QMessageBox)
+from PyQt5.QtWidgets import (QLabel, QLineEdit, QPushButton, QGroupBox,
+                             QGridLayout, QVBoxLayout, QMessageBox, QDialog)
 from PyQt5.QtGui import QValidator, QIntValidator, QDoubleValidator
 
 from okcanceldialog import OKCancelDialog
+from changepassphrasedialog import ChangePassphraseDialog
+from editpassword import EditPassword
 import constants
 
 
@@ -75,14 +77,51 @@ class SettingsDialog(OKCancelDialog):
         miscLayout.addWidget(self.pngResolutionLE, 2, 1)
         miscGroupBox.setLayout(miscLayout)
 
+        securityGroupBox = QGroupBox('Security', self)
+        self.changePassphraseBtn = QPushButton("Set/change", self)
+        self.changePassphraseBtn.clicked.connect(self.changePassphrase)
+        self.deletePassphraseBtn = QPushButton("Delete", self)
+        self.deletePassphraseBtn.clicked.connect(self.deletePassphrase)
+        securityLayout = QGridLayout()
+        securityLayout.addWidget(QLabel('Set or change the master passphrase:'), 0, 0)
+        securityLayout.addWidget(self.changePassphraseBtn, 0, 1)
+        securityLayout.addWidget(QLabel('Delete the master passphrase:'), 1, 0)
+        securityLayout.addWidget(self.deletePassphraseBtn, 1, 1)
+        securityGroupBox.setLayout(securityLayout)
+
+        sshGroupBox = QGroupBox('SSH', self)
+        self.sshHostLE = QLineEdit(self.settings.value('TabletHostname', type=str), self)
+        self.sshUsernameLE = QLineEdit(self.settings.value('SSHUsername', type=str), self)
+        self.changeSSHPasswordBtn = QPushButton("Set/change", self)
+        self.changeSSHPasswordBtn.clicked.connect(self.changeSSHPassword)
+        self.tabletDocsDirLE = QLineEdit(self.settings.value('TabletDocumentsDir', type=str), self)
+        sshLayout = QGridLayout()
+        sshLayout.addWidget(QLabel('Hostname or IP address:'), 0, 0)
+        sshLayout.addWidget(self.sshHostLE, 0, 1)
+        sshLayout.addWidget(QLabel('Username:'), 1, 0)
+        sshLayout.addWidget(self.sshUsernameLE, 1, 1)
+        sshLayout.addWidget(QLabel('Password:'), 2, 0)
+        sshLayout.addWidget(self.changeSSHPasswordBtn, 2, 1)
+        sshLayout.addWidget(QLabel('Documents directory:'), 3, 0)
+        sshLayout.addWidget(self.tabletDocsDirLE, 3, 1)
+        sshGroupBox.setLayout(sshLayout)
+
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(urlGroupBox)
         mainLayout.addWidget(miscGroupBox)
+        mainLayout.addWidget(securityGroupBox)
+        mainLayout.addWidget(sshGroupBox)
         self.setLayout(mainLayout)
+
+        self.updateWindowState()
 
         self.setWindowTitle('Settings')
 
         self.accepted.connect(self.updateSettings)
+
+
+    def updateWindowState(self):
+        self.deletePassphraseBtn.setEnabled(self.settings.isPassphraseSet())
 
 
     def ok(self):
@@ -131,6 +170,36 @@ class SettingsDialog(OKCancelDialog):
         super().ok()
 
 
+    def changePassphrase(self):
+
+        dialog = ChangePassphraseDialog(self.settings, self)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            self.settings.changeMasterKey(dialog.newPassphraseLE.text())
+            self.updateWindowState()
+
+
+    def deletePassphrase(self):
+
+        # Ask confirmation
+        reply = QMessageBox.question(self, 'rMExplorer',
+                                     'Are you sure you want to delete the passphrase and all the encrypted parameters?')
+        if reply == QMessageBox.No:
+            return
+
+        # Delete encrypted parameters
+        self.settings.deleteMasterKey()
+        self.updateWindowState()
+        QMessageBox.information(self, 'rMExplorer',
+                                'All encrypted data have been erased.')
+
+
+    def changeSSHPassword(self):
+
+        ep = EditPassword(self, self.settings, 'SSH password', 'SSHPassword')
+        ep.exec()
+
+
     def updateSettings(self):
 
         self.settings.setValue('listFolderURL',
@@ -143,3 +212,9 @@ class SettingsDialog(OKCancelDialog):
                                float(self.httpShortTimeoutLE.text()))
         self.settings.setValue('PNGResolution',
                                int(self.pngResolutionLE.text()))
+        self.settings.setValue('TabletHostname',
+                               str(self.sshHostLE.text()))
+        self.settings.setValue('SSHUsername',
+                               str(self.sshUsernameLE.text()))
+        self.settings.setValue('TabletDocumentsDir',
+                               str(self.tabletDocsDirLE.text()))

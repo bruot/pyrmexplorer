@@ -33,8 +33,16 @@ import urllib.request
 import wand.image
 
 
+class OperationCancelled(Exception):
+    pass
+
+
+class DecipherError(Exception):
+    pass
+
+
 @functools.total_ordering
-class Version(object):
+class Version():
     """Represents a program version"""
 
     def __init__(self, version_str):

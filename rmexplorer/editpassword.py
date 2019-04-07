@@ -22,18 +22,31 @@
 # along with pyrmexplorer.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""Constants for rMExplorer"""
+"""Handles a password change to be recorded in the parameters"""
 
 
-MasterKeyLen = 32
-HttpTimeoutMin = 0
-HttpTimeoutMax = 999
-HttpShortTimeoutMin = 0
-HttpShortTimeoutMax = 60
-HttpShortTimeoutMaxDecimals = 3
-PngExportDpiMin = 30
-PngExportDpiMax = 10000
-PassphraseMinStrength = 0.7
-PassphraseMaxLen = 1024
-TestString = 'Can you read me?'
-SSHTimeout = 10.0
+from PyQt5.QtWidgets import QDialog
+
+from editpassworddialog import EditPasswordDialog
+
+
+class EditPassword():
+
+    def __init__(self, parent, settings, title, settings_key):
+        self._parent = parent
+        self._settings = settings
+        self._title = title
+        self._key = settings_key
+
+
+    def exec(self):
+
+        if not self._settings.unlockMasterKeyInteractive(self._parent):
+            return
+
+        cur_value = self._settings.encryptedStrValue(self._key)
+        dialog = EditPasswordDialog('SSH password:', cur_value, self._parent)
+        if dialog.exec() == QDialog.Accepted:
+            new_value = dialog.passwordLE.text()
+            if new_value != cur_value:
+                self._settings.setEncryptedStrValue(self._key, new_value)
