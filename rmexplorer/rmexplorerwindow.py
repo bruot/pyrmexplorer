@@ -324,6 +324,7 @@ class RmExplorerWindow(QMainWindow):
         self.settings.setValue('lastSSHBackupDir', os.path.split(folder)[0])
 
         if not self.settings.unlockMasterKeyInteractive(self):
+            self.statusBar().showMessage('Cancelled.', 5000)
             return
 
         self.progressWindow = ProgressWindow(self, knownEndVal=False)
@@ -455,6 +456,9 @@ class RmExplorerWindow(QMainWindow):
             warningBox.setText('Errors were encountered:\n%s' % self.currentWarning)
             warningBox.setIcon(QMessageBox.Warning)
             warningBox.exec()
+        else:
+            QMessageBox.information(self, 'rMExplorer',
+                                    'Backup was created successfully!')
         self.statusBar().showMessage('Finished downloading backup.', 5000)
 
 
