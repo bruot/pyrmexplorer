@@ -29,6 +29,7 @@ import os
 import io
 import socket
 import functools
+import re
 import urllib.request
 import wand.image
 
@@ -79,3 +80,20 @@ def downloadFile(fid, basePath, destRelPath, mode, settings):
                               resolution=settings.value('PNGResolution', type=int)) as img:
             with img.convert('png') as converted:
                 converted.save(filename=destPath)
+
+
+def isValidBackupDir(folder):
+    """Checks if a folder looks like a backup by looking at the structure of filenames"""
+
+    filenames = os.listdir(folder)
+
+    if len(filenames) == 0:
+        return (False, 'Folder is empty.')
+
+    regexp = '^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}(\.[a-z0-9]+)*$'
+    for filename in filenames:
+        m = re.match(regexp, filename)
+        if m is None:
+            return (False, 'Folder contains file or folder "%s" that does not seem to be part of a reMarkable document according its name.' % filename)
+
+    return (True, None)

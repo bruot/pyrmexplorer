@@ -41,6 +41,7 @@ from saveoptsdialog import SaveOptsDialog
 from settingsdialog import SettingsDialog
 from downloadfilesworker import DownloadFilesWorker
 from backupdocsworker import BackupDocsWorker
+from restoredocsworker import RestoreDocsWorker
 from progresswindow import ProgressWindow
 from settings import Settings
 import tools
@@ -92,10 +93,12 @@ class RmExplorerWindow(QMainWindow):
         self.goToDir('', '')
 
         self.currentWarning = ''
+        self.hasRaised = None
 
         self.progressWindow = None
         self.downloadFilesWorker = None
         self.backupDocsWorker = None
+        self.restoreDocsWorker = None
         self.taskThread = None
 
         self._masterKey = None
@@ -149,8 +152,13 @@ class RmExplorerWindow(QMainWindow):
         backupDocsAct.setStatusTip('Backup all notebooks, documents, ebooks and bookmarks to a folder on this computer.')
         backupDocsAct.triggered.connect(self.backupDocs)
         #
+        restoreDocsAct = QAction('&Restore documents', self)
+        restoreDocsAct.setStatusTip('Restore documents on the tablet from a backup on this computer.')
+        restoreDocsAct.triggered.connect(self.restoreDocs)
+        #
         sshMenu = menubar.addMenu('&SSH')
         sshMenu.addAction(backupDocsAct)
+        sshMenu.addAction(restoreDocsAct)
 
         # About menu
         aboutAct = QAction('rMExplorer', self)
@@ -344,6 +352,68 @@ class RmExplorerWindow(QMainWindow):
         self.taskThread.start()
 
 
+    def restoreDocs(self):
+
+        # Confirm user has a backup folder
+        tabletDir = self.settings.value('TabletDocumentsDir')
+        msg = "To restore a backup, you need a previous copy on your computer of the tablet's \"%s\" folder. Ensure the backup you select was made with a tablet having the same software version as the device on which you want to restore the files.\n\n" % tabletDir
+        msg += "Do you have such a backup and want to proceed to the restoration?"
+        reply = QMessageBox.question(self, 'rMExplorer', msg)
+        if reply == QMessageBox.No:
+            self.statusBar().showMessage('Cancelled.', 5000)
+            return
+
+        # Source folder
+        defaultDir = (self.settings.value('lastSSHBackupDir', type=str)
+                      or self.settings.value('lastDir', type=str))
+        folder = QFileDialog.getExistingDirectory(self,
+                                                  'Backup directory',
+                                                  defaultDir,
+                                                  QFileDialog.ShowDirsOnly
+                                                  | QFileDialog.DontResolveSymlinks)
+        if not folder:
+            self.statusBar().showMessage('Cancelled.', 5000)
+            return
+        self.settings.setValue('lastSSHBackupDir', os.path.split(folder)[0])
+
+        # Basic check that the folder contents looks like a backup
+        success, msg = tools.isValidBackupDir(folder)
+        if not success:
+            QMessageBox.warning(self, 'rMExplorer', '%s\nAborting.' % msg)
+            self.statusBar().showMessage('Cancelled.', 5000)
+            return
+
+        if not self.settings.unlockMasterKeyInteractive(self):
+            self.statusBar().showMessage('Cancelled.', 5000)
+            return
+
+        # Last chance to cancel!
+        msg = "rMExplorer is now ready to restore the documents. Please check that the tablet is turned on, unlocked and that Wifi is enabled. Make sure no file is open and do not use the tablet during the upload.\n\n"
+        msg += "When the upload finishes, please reboot the tablet.\n\n"
+        msg += "To restore documents, contents on the tablet will first be deleted. By continuing, you acknowledge that you take the sole responsibility for any possible data loss or damage caused to the tablet that may result from using rMExplorer.\n\n"
+        msg += "Do you want to continue?"
+        reply = QMessageBox.question(self, 'rMExplorer', msg)
+        if reply == QMessageBox.No:
+            self.statusBar().showMessage('Cancelled.', 5000)
+            return
+
+        self.progressWindow = ProgressWindow(self, knownEndVal=False)
+        self.progressWindow.setWindowTitle("Uploading backup...")
+        self.progressWindow.open()
+
+        self.settings.sync()
+        self.hasRaised = False
+        self.restoreDocsWorker = RestoreDocsWorker(folder, self.settings._masterKey)
+
+        self.taskThread = QThread()
+        self.restoreDocsWorker.moveToThread(self.taskThread)
+        self.taskThread.started.connect(self.restoreDocsWorker.start)
+        self.restoreDocsWorker.notifyProgress.connect(self.progressWindow.updateStep)
+        self.restoreDocsWorker.finished.connect(self.onRestoreDocsFinished)
+        self.restoreDocsWorker.error.connect(self.errorRaised)
+        self.taskThread.start()
+
+
     #########
     # Slots #
     #########
@@ -407,6 +477,12 @@ class RmExplorerWindow(QMainWindow):
         self.currentWarning = msg
 
 
+    def errorRaised(self, msg):
+
+        self.hasRaised = True
+        QMessageBox.critical(self, 'rMExplorer', 'Error:\n%s\nAborted.' % msg)
+
+
     def onDownloadFilesFinished(self):
 
         self.progressWindow.hide()
@@ -460,6 +536,26 @@ class RmExplorerWindow(QMainWindow):
             QMessageBox.information(self, 'rMExplorer',
                                     'Backup was created successfully!')
         self.statusBar().showMessage('Finished downloading backup.', 5000)
+
+
+    def onRestoreDocsFinished(self):
+
+        self.progressWindow.hide()
+
+        self.taskThread.started.disconnect(self.restoreDocsWorker.start)
+        self.restoreDocsWorker.error.disconnect(self.errorRaised)
+        self.restoreDocsWorker.finished.disconnect(self.onRestoreDocsFinished)
+
+        self.taskThread.quit()
+        self.restoreDocsWorker.deleteLater()
+        self.taskThread.deleteLater()
+        self.taskThread.wait()
+
+        if not self.hasRaised:
+            QMessageBox.information(self, 'rMExplorer',
+                                    'Backup was restored successfully! Please reboot the tablet now.')
+
+            self.statusBar().showMessage('Finished restoring backup.', 5000)
 
 
     def about(self):
