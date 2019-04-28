@@ -37,3 +37,4 @@ PassphraseMinStrength = 0.7
 PassphraseMaxLen = 1024
 TestString = 'Can you read me?'
 SSHTimeout = 10.0
+StatusBarMsgDisplayDuration = 5000

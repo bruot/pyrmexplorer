@@ -36,6 +36,7 @@ from PyQt5.QtWidgets import (qApp, QWidget, QMainWindow, QMenu, QAction,
                              QLabel, QListWidget, QGridLayout, QVBoxLayout,
                              QDialog, QFileDialog, QMessageBox)
 
+import constants
 from _version import __version__
 from saveoptsdialog import SaveOptsDialog
 from settingsdialog import SettingsDialog
@@ -250,9 +251,11 @@ class RmExplorerWindow(QMainWindow):
             warningBox.setText('URL error: %s. Aborted.' % e.reason)
             warningBox.setIcon(QMessageBox.Warning)
             warningBox.exec()
-            self.statusBar().showMessage('Download error.', 5000)
+            self.statusBar().showMessage('Download error.',
+                                         constants.StatusBarMsgDisplayDuration)
         else:
-            self.statusBar().showMessage('Download finished.', 5000)
+            self.statusBar().showMessage('Download finished.',
+                                         constants.StatusBarMsgDisplayDuration)
 
 
     def downloadDir(self, directory, rootName):
@@ -266,7 +269,8 @@ class RmExplorerWindow(QMainWindow):
                 warningBox.setText('URL error: %s. Aborted.' % e.reason)
                 warningBox.setIcon(QMessageBox.Warning)
                 warningBox.exec()
-                self.statusBar().showMessage('Download error.', 5000)
+                self.statusBar().showMessage('Download error.',
+                                             constants.StatusBarMsgDisplayDuration)
                 return
             data = json.loads(data)
             for elem in data:
@@ -312,7 +316,8 @@ class RmExplorerWindow(QMainWindow):
                 self.downloadFilesWorker.warning.connect(self.warningRaised)
                 self.taskThread.start()
             else:
-                self.statusBar().showMessage('Cancelled.', 5000)
+                self.statusBar().showMessage('Cancelled.',
+                                             constants.StatusBarMsgDisplayDuration)
 
 
     def backupDocs(self):
@@ -326,13 +331,15 @@ class RmExplorerWindow(QMainWindow):
                                                   QFileDialog.ShowDirsOnly
                                                   | QFileDialog.DontResolveSymlinks)
         if not folder:
-            self.statusBar().showMessage('Cancelled.', 5000)
+            self.statusBar().showMessage('Cancelled.',
+                                         constants.StatusBarMsgDisplayDuration)
             return
 
         self.settings.setValue('lastSSHBackupDir', os.path.split(folder)[0])
 
         if not self.settings.unlockMasterKeyInteractive(self):
-            self.statusBar().showMessage('Cancelled.', 5000)
+            self.statusBar().showMessage('Cancelled.',
+                                         constants.StatusBarMsgDisplayDuration)
             return
 
         self.progressWindow = ProgressWindow(self, knownEndVal=False)
@@ -360,7 +367,8 @@ class RmExplorerWindow(QMainWindow):
         msg += "Do you have such a backup and want to proceed to the restoration?"
         reply = QMessageBox.question(self, 'rMExplorer', msg)
         if reply == QMessageBox.No:
-            self.statusBar().showMessage('Cancelled.', 5000)
+            self.statusBar().showMessage('Cancelled.',
+                                         constants.StatusBarMsgDisplayDuration)
             return
 
         # Source folder
@@ -372,7 +380,8 @@ class RmExplorerWindow(QMainWindow):
                                                   QFileDialog.ShowDirsOnly
                                                   | QFileDialog.DontResolveSymlinks)
         if not folder:
-            self.statusBar().showMessage('Cancelled.', 5000)
+            self.statusBar().showMessage('Cancelled.',
+                                         constants.StatusBarMsgDisplayDuration)
             return
         self.settings.setValue('lastSSHBackupDir', os.path.split(folder)[0])
 
@@ -380,11 +389,13 @@ class RmExplorerWindow(QMainWindow):
         success, msg = tools.isValidBackupDir(folder)
         if not success:
             QMessageBox.warning(self, 'rMExplorer', '%s\nAborting.' % msg)
-            self.statusBar().showMessage('Cancelled.', 5000)
+            self.statusBar().showMessage('Cancelled.',
+                                         constants.StatusBarMsgDisplayDuration)
             return
 
         if not self.settings.unlockMasterKeyInteractive(self):
-            self.statusBar().showMessage('Cancelled.', 5000)
+            self.statusBar().showMessage('Cancelled.',
+                                         constants.StatusBarMsgDisplayDuration)
             return
 
         # Last chance to cancel!
@@ -394,7 +405,8 @@ class RmExplorerWindow(QMainWindow):
         msg += "Do you want to continue?"
         reply = QMessageBox.question(self, 'rMExplorer', msg)
         if reply == QMessageBox.No:
-            self.statusBar().showMessage('Cancelled.', 5000)
+            self.statusBar().showMessage('Cancelled.',
+                                         constants.StatusBarMsgDisplayDuration)
             return
 
         self.progressWindow = ProgressWindow(self, knownEndVal=False)
@@ -456,9 +468,11 @@ class RmExplorerWindow(QMainWindow):
                 self.settings.setValue('lastDir', parts[0])
                 self.downloadFile(parts[0], (fid, parts[1]), ext)
             else:
-                self.statusBar().showMessage('Cancelled.', 5000)
+                self.statusBar().showMessage('Cancelled.',
+                                             constants.StatusBarMsgDisplayDuration)
         else:
-            self.statusBar().showMessage('Cancelled.', 5000)
+            self.statusBar().showMessage('Cancelled.',
+                                         constants.StatusBarMsgDisplayDuration)
 
 
     def downloadDirClicked(self):
@@ -503,7 +517,8 @@ class RmExplorerWindow(QMainWindow):
             warningBox.setText('Errors were encountered:\n%s' % self.currentWarning)
             warningBox.setIcon(QMessageBox.Warning)
             warningBox.exec()
-        self.statusBar().showMessage('Finished downloading files.', 5000)
+        self.statusBar().showMessage('Finished downloading files.',
+                                     constants.StatusBarMsgDisplayDuration)
 
 
     def editSettings(self):
@@ -511,7 +526,8 @@ class RmExplorerWindow(QMainWindow):
         dialog = SettingsDialog(self.settings, self)
         if dialog.exec() == QDialog.Accepted:
             self.updateFromSettings()
-            self.statusBar().showMessage('Settings updated.', 5000)
+            self.statusBar().showMessage('Settings updated.',
+                                         constants.StatusBarMsgDisplayDuration)
 
 
     def onBackupDocsFinished(self):
@@ -535,7 +551,8 @@ class RmExplorerWindow(QMainWindow):
         else:
             QMessageBox.information(self, 'rMExplorer',
                                     'Backup was created successfully!')
-        self.statusBar().showMessage('Finished downloading backup.', 5000)
+        self.statusBar().showMessage('Finished downloading backup.',
+                                     constants.StatusBarMsgDisplayDuration)
 
 
     def onRestoreDocsFinished(self):
@@ -555,7 +572,8 @@ class RmExplorerWindow(QMainWindow):
             QMessageBox.information(self, 'rMExplorer',
                                     'Backup was restored successfully! Please reboot the tablet now.')
 
-            self.statusBar().showMessage('Finished restoring backup.', 5000)
+            self.statusBar().showMessage('Finished restoring backup.',
+                                         constants.StatusBarMsgDisplayDuration)
 
 
     def about(self):
