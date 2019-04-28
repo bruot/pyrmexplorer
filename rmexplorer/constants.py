@@ -25,6 +25,7 @@
 """Constants for rMExplorer"""
 
 
+AppName = 'rMExplorer'
 MasterKeyLen = 32
 HttpTimeoutMin = 0
 HttpTimeoutMax = 999

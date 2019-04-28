@@ -104,7 +104,7 @@ class RmExplorerWindow(QMainWindow):
 
         self._masterKey = None
 
-        self.setWindowTitle('rMExplorer')
+        self.setWindowTitle(constants.AppName)
 
 
     ###################
@@ -134,12 +134,12 @@ class RmExplorerWindow(QMainWindow):
         #
         settingsAct = QAction('&Settings', self)
         settingsAct.setShortcut('Ctrl+S')
-        settingsAct.setStatusTip('rMExplorer settings')
+        settingsAct.setStatusTip('%s settings' % constants.AppName)
         settingsAct.triggered.connect(self.editSettings)
         #
         exitAct = QAction('&Exit', self)
         exitAct.setShortcut('Ctrl+Q')
-        exitAct.setStatusTip('Exit rMExplorer.')
+        exitAct.setStatusTip('Exit %s.' % constants.AppName)
         exitAct.triggered.connect(qApp.quit)
         #
         explorerMenu = menubar.addMenu('&Explorer')
@@ -162,8 +162,8 @@ class RmExplorerWindow(QMainWindow):
         sshMenu.addAction(restoreDocsAct)
 
         # About menu
-        aboutAct = QAction('rMExplorer', self)
-        aboutAct.setStatusTip("Show rMExplorer's About box.")
+        aboutAct = QAction(constants.AppName, self)
+        aboutAct.setStatusTip("Show %s's About box." % constants.AppName)
         aboutAct.triggered.connect(self.about)
         #
         aboutQtAct = QAction('Qt', self)
@@ -186,10 +186,8 @@ class RmExplorerWindow(QMainWindow):
         try:
             data = urllib.request.urlopen(url).read()
         except urllib.error.URLError as e:
-            errorBox = QMessageBox(self)
-            errorBox.setText('Could not go to directory "%s": URL error:\n%s' % (dirId, e.reason))
-            errorBox.setIcon(QMessageBox.Critical)
-            errorBox.exec()
+            QMessageBox.critical(self, constants.AppName,
+                                 'Could not go to directory "%s": URL error:\n%s' % (dirId, e.reason))
             return
 
         data = json.loads(data)
@@ -247,10 +245,8 @@ class RmExplorerWindow(QMainWindow):
         try:
             tools.downloadFile(fid, basePath, destRelPath, mode, self.settings)
         except urllib.error.URLError as e:
-            warningBox = QMessageBox(self)
-            warningBox.setText('URL error: %s. Aborted.' % e.reason)
-            warningBox.setIcon(QMessageBox.Warning)
-            warningBox.exec()
+            QMessageBox.error(self, constants.AppName,
+                                'URL error: %s. Aborted.' % e.reason)
             self.statusBar().showMessage('Download error.',
                                          constants.StatusBarMsgDisplayDuration)
         else:
@@ -365,7 +361,7 @@ class RmExplorerWindow(QMainWindow):
         tabletDir = self.settings.value('TabletDocumentsDir')
         msg = "To restore a backup, you need a previous copy on your computer of the tablet's \"%s\" folder. Ensure the backup you select was made with a tablet having the same software version as the device on which you want to restore the files.\n\n" % tabletDir
         msg += "Do you have such a backup and want to proceed to the restoration?"
-        reply = QMessageBox.question(self, 'rMExplorer', msg)
+        reply = QMessageBox.question(self, constants.AppName, msg)
         if reply == QMessageBox.No:
             self.statusBar().showMessage('Cancelled.',
                                          constants.StatusBarMsgDisplayDuration)
@@ -388,7 +384,7 @@ class RmExplorerWindow(QMainWindow):
         # Basic check that the folder contents looks like a backup
         success, msg = tools.isValidBackupDir(folder)
         if not success:
-            QMessageBox.warning(self, 'rMExplorer', '%s\nAborting.' % msg)
+            QMessageBox.warning(self, constants.AppName, '%s\nAborting.' % msg)
             self.statusBar().showMessage('Cancelled.',
                                          constants.StatusBarMsgDisplayDuration)
             return
@@ -399,11 +395,11 @@ class RmExplorerWindow(QMainWindow):
             return
 
         # Last chance to cancel!
-        msg = "rMExplorer is now ready to restore the documents. Please check that the tablet is turned on, unlocked and that Wifi is enabled. Make sure no file is open and do not use the tablet during the upload.\n\n"
+        msg = "%s is now ready to restore the documents. Please check that the tablet is turned on, unlocked and that Wifi is enabled. Make sure no file is open and do not use the tablet during the upload.\n\n" % constants.AppName
         msg += "When the upload finishes, please reboot the tablet.\n\n"
-        msg += "To restore documents, contents on the tablet will first be deleted. By continuing, you acknowledge that you take the sole responsibility for any possible data loss or damage caused to the tablet that may result from using rMExplorer.\n\n"
+        msg += "To restore documents, contents on the tablet will first be deleted. By continuing, you acknowledge that you take the sole responsibility for any possible data loss or damage caused to the tablet that may result from using %s.\n\n" % constants.AppName
         msg += "Do you want to continue?"
-        reply = QMessageBox.question(self, 'rMExplorer', msg)
+        reply = QMessageBox.question(self, constants.AppName, msg)
         if reply == QMessageBox.No:
             self.statusBar().showMessage('Cancelled.',
                                          constants.StatusBarMsgDisplayDuration)
@@ -494,7 +490,8 @@ class RmExplorerWindow(QMainWindow):
     def errorRaised(self, msg):
 
         self.hasRaised = True
-        QMessageBox.critical(self, 'rMExplorer', 'Error:\n%s\nAborted.' % msg)
+        QMessageBox.critical(self, constants.AppName,
+                             'Error:\n%s\nAborted.' % msg)
 
 
     def onDownloadFilesFinished(self):
@@ -513,10 +510,8 @@ class RmExplorerWindow(QMainWindow):
         self.taskThread.wait()
 
         if self.currentWarning:
-            warningBox = QMessageBox(self)
-            warningBox.setText('Errors were encountered:\n%s' % self.currentWarning)
-            warningBox.setIcon(QMessageBox.Warning)
-            warningBox.exec()
+            QMessageBox.warning(self, constants.AppName,
+                                'Errors were encountered:\n%s' % self.currentWarning)
         self.statusBar().showMessage('Finished downloading files.',
                                      constants.StatusBarMsgDisplayDuration)
 
@@ -544,12 +539,10 @@ class RmExplorerWindow(QMainWindow):
         self.taskThread.wait()
 
         if self.currentWarning:
-            warningBox = QMessageBox(self)
-            warningBox.setText('Errors were encountered:\n%s' % self.currentWarning)
-            warningBox.setIcon(QMessageBox.Warning)
-            warningBox.exec()
+            QMessageBox.warning(self, constants.AppName,
+                                'Errors were encountered:\n%s' % self.currentWarning)
         else:
-            QMessageBox.information(self, 'rMExplorer',
+            QMessageBox.information(self, constants.AppName,
                                     'Backup was created successfully!')
         self.statusBar().showMessage('Finished downloading backup.',
                                      constants.StatusBarMsgDisplayDuration)
@@ -569,7 +562,7 @@ class RmExplorerWindow(QMainWindow):
         self.taskThread.wait()
 
         if not self.hasRaised:
-            QMessageBox.information(self, 'rMExplorer',
+            QMessageBox.information(self, constants.AppName,
                                     'Backup was restored successfully! Please reboot the tablet now.')
 
             self.statusBar().showMessage('Finished restoring backup.',

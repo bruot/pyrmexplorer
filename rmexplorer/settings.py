@@ -63,8 +63,9 @@ class Settings():
             settings_ver = tools.Version(self._settings.value('version'))
             if settings_ver > tools.Version(__version__):
                 # Program older than settings: force the user to upgrade.
-                raise Exception("Program version %s is lower than settings version (%s). Use rmExplorer's latest version." % (__version__,
-                                                                                                                              self._settings.value('version')))
+                raise Exception("Program version %s is lower than settings version (%s). Use %s's latest version." % (__version__,
+                                                                                                                      self._settings.value('version'),
+                                                                                                                      constants.AppName))
             else:
                 # Program may be newer than settings.  Settings migrations go
                 # here.
@@ -150,7 +151,7 @@ class Settings():
 
     def unlockMasterKeyInteractive(self, parent):
         if not self.isPassphraseSet():
-            QMessageBox.warning(parent, 'rMExplorer',
+            QMessageBox.warning(parent, constants.AppName,
                                 'No master passphrase set. Please set a master passphrase in the settings to enable the passwords saving feature.')
             return False
 

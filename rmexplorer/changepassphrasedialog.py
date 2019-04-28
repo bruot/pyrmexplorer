@@ -60,13 +60,11 @@ class ChangePassphraseDialog(OKCancelDialog):
         mainLayout.addWidget(self.repeatPassphraseLE)
         self.setLayout(mainLayout)
 
-        self.setWindowTitle('rMExplorer passphrase settings')
+        self.setWindowTitle('%s passphrase settings' % constants.AppName)
 
 
     def validationWarning(self, message):
-        dialog = QMessageBox(self)
-        dialog.setText(message)
-        dialog.exec()
+        QMessageBox.warning(self, constants.AppName, message)
 
 
     def ok(self):

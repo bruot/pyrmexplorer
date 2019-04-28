@@ -182,7 +182,7 @@ class SettingsDialog(OKCancelDialog):
     def deletePassphrase(self):
 
         # Ask confirmation
-        reply = QMessageBox.question(self, 'rMExplorer',
+        reply = QMessageBox.question(self, constants.AppName,
                                      'Are you sure you want to delete the passphrase and all the encrypted parameters?')
         if reply == QMessageBox.No:
             return
@@ -190,7 +190,7 @@ class SettingsDialog(OKCancelDialog):
         # Delete encrypted parameters
         self.settings.deleteMasterKey()
         self.updateWindowState()
-        QMessageBox.information(self, 'rMExplorer',
+        QMessageBox.information(self, constants.AppName,
                                 'All encrypted data have been erased.')
 
 

@@ -27,6 +27,7 @@
 
 from PyQt5.QtWidgets import QLabel, QLineEdit, QVBoxLayout
 
+import constants
 from okcanceldialog import OKCancelDialog
 
 
@@ -44,4 +45,4 @@ class EditPasswordDialog(OKCancelDialog):
         mainLayout.addWidget(self.passwordLE)
         self.setLayout(mainLayout)
 
-        self.setWindowTitle('rMExplorer')
+        self.setWindowTitle(constants.AppName)

@@ -27,6 +27,7 @@
 
 from PyQt5.QtWidgets import QLabel, QLineEdit, QVBoxLayout
 
+import constants
 from okcanceldialog import OKCancelDialog
 
 
@@ -39,7 +40,7 @@ class AskPassphraseDialog(OKCancelDialog):
         self.passphraseLE = QLineEdit(self)
         self.passphraseLE.setEchoMode(QLineEdit.Password)
         mainLayout = QVBoxLayout()
-        mainLayout.addWidget(QLabel('Enter your rMExplorer passphrase:'))
+        mainLayout.addWidget(QLabel('Enter your %s passphrase:' % constants.AppName))
         mainLayout.addWidget(self.passphraseLE)
         self.setLayout(mainLayout)
 
