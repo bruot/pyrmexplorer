@@ -66,8 +66,7 @@ class BackupDocsWorker(QObject):
             if stat.S_ISDIR(lstat.st_mode):
                 os.mkdir(destPath)
                 count = self._recursiveDownload(sftpClient,
-                                                os.path.join(root, name),
-                                                os.path.join(destRoot, name),
+                                                path, destPath,
                                                 count)
             else:
                 sftpClient.get(path, destPath)
