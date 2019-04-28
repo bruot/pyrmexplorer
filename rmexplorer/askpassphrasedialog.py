@@ -43,4 +43,6 @@ class AskPassphraseDialog(OKCancelDialog):
         mainLayout.addWidget(self.passphraseLE)
         self.setLayout(mainLayout)
 
+        self.passphraseLE.setFocus()
+
         self.setWindowTitle('rMExplorer passphrase')
