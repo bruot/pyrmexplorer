@@ -27,6 +27,7 @@
 
 import os
 import stat
+import posixpath
 from datetime import datetime
 import socket
 import paramiko
@@ -60,7 +61,7 @@ class BackupDocsWorker(QObject):
         for name in sftpClient.listdir(root):
             count += 1
             self.notifyProgress.emit(count)
-            path = os.path.join(root, name)
+            path = posixpath.join(root, name)
             destPath = os.path.join(destRoot, name)
             lstat = sftpClient.lstat(path)
             if stat.S_ISDIR(lstat.st_mode):
