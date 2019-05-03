@@ -37,13 +37,14 @@ from PyQt5.QtCore import QObject
 # mature enough.
 from PyQt5.QtCore import pyqtSignal as Signal
 
-import constants
+import tools
 from settings import Settings
 
 
 class BackupDocsWorker(QObject):
 
     notifyProgress = Signal(int)
+    notifyNSteps = Signal(int)
     warning = Signal(str)
     finished = Signal()
 
@@ -54,6 +55,19 @@ class BackupDocsWorker(QObject):
 
         self._settings = Settings(masterKey)
         self._destFolder = destFolder
+
+
+    def _countRemoteElems(self, sftpClient, root, count=0):
+        """Counts the number of files and folders recursively in a path"""
+
+        for name in sftpClient.listdir(root):
+            count += 1
+            path = posixpath.join(root, name)
+            lstat = sftpClient.lstat(path)
+            if stat.S_ISDIR(lstat.st_mode):
+                count += self._countRemoteElems(sftpClient, path, count=0)
+
+        return count
 
 
     def _recursiveDownload(self, sftpClient, root, destRoot, count=0):
@@ -85,26 +99,20 @@ class BackupDocsWorker(QObject):
         warnings = []
 
         try:
-            with paramiko.SSHClient() as ssh:
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(self._settings.value('TabletHostname', type=str),
-                            username=self._settings.value('SSHUsername', type=str),
-                            password=self._settings.encryptedStrValue('SSHPassword'),
-                            timeout=constants.SSHTimeout,
-                            banner_timeout=constants.SSHTimeout,
-                            allow_agent=False)
-
-                with ssh.open_sftp() as sftp:
-                    destFolder = os.path.join(self._destFolder,
-                                              datetime.strftime(datetime.now(), 'remarkable_bak_%Y%m%d_%H%M%S'))
-                    try:
-                        os.mkdir(destFolder)
-                    except FileExistsError:
-                        warnings.append('Path "%s" already exists.' % destFolder)
-                    else:
-                        self._recursiveDownload(sftp,
-                                                self._settings.value('TabletDocumentsDir', type=str),
-                                                destFolder)
+            with tools.openSftp(self._settings) as sftp:
+                destFolder = os.path.join(self._destFolder,
+                                          datetime.strftime(datetime.now(), 'remarkable_bak_%Y%m%d_%H%M%S'))
+                try:
+                    os.mkdir(destFolder)
+                except FileExistsError:
+                    warnings.append('Path "%s" already exists.' % destFolder)
+                else:
+                    nFiles = self._countRemoteElems(sftp,
+                                                    self._settings.value('TabletDocumentsDir', type=str))
+                    self.notifyNSteps.emit(nFiles)
+                    self._recursiveDownload(sftp,
+                                            self._settings.value('TabletDocumentsDir', type=str),
+                                            destFolder)
         except socket.timeout:
             warnings.append('SSH timeout.')
         except socket.error:

@@ -29,9 +29,13 @@ import os
 import io
 import socket
 import functools
+import contextlib
 import re
 import urllib.request
+import paramiko
 import wand.image
+
+import constants
 
 
 class OperationCancelled(Exception):
@@ -56,6 +60,28 @@ class Version():
 
     def __gt__(self, v):
         return self._version > v._version
+
+
+@contextlib.contextmanager
+def openSftp(settings):
+    """Defines a context manager that opens an SFTP session with parameters from `settings`"""
+
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        ssh.connect(settings.value('TabletHostname', type=str),
+                    username=settings.value('SSHUsername', type=str),
+                    password=settings.encryptedStrValue('SSHPassword'),
+                    timeout=constants.SSHTimeout,
+                    banner_timeout=constants.SSHTimeout,
+                    allow_agent=False)
+        try:
+            sftp = ssh.open_sftp()
+            yield sftp
+        finally:
+            sftp.close()
+    finally:
+        ssh.close()
 
 
 def downloadFile(fid, basePath, destRelPath, mode, settings):

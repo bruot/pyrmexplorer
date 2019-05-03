@@ -338,7 +338,7 @@ class RmExplorerWindow(QMainWindow):
                                          constants.StatusBarMsgDisplayDuration)
             return
 
-        self.progressWindow = ProgressWindow(self, knownEndVal=False)
+        self.progressWindow = ProgressWindow(self)
         self.progressWindow.setWindowTitle("Downloading backup...")
         self.progressWindow.open()
 
@@ -349,6 +349,7 @@ class RmExplorerWindow(QMainWindow):
         self.taskThread = QThread()
         self.backupDocsWorker.moveToThread(self.taskThread)
         self.taskThread.started.connect(self.backupDocsWorker.start)
+        self.backupDocsWorker.notifyNSteps.connect(self.progressWindow.updateNSteps)
         self.backupDocsWorker.notifyProgress.connect(self.progressWindow.updateStep)
         self.backupDocsWorker.finished.connect(self.onBackupDocsFinished)
         self.backupDocsWorker.warning.connect(self.warningRaised)
@@ -405,7 +406,7 @@ class RmExplorerWindow(QMainWindow):
                                          constants.StatusBarMsgDisplayDuration)
             return
 
-        self.progressWindow = ProgressWindow(self, knownEndVal=False)
+        self.progressWindow = ProgressWindow(self)
         self.progressWindow.setWindowTitle("Uploading backup...")
         self.progressWindow.open()
 
@@ -416,6 +417,7 @@ class RmExplorerWindow(QMainWindow):
         self.taskThread = QThread()
         self.restoreDocsWorker.moveToThread(self.taskThread)
         self.taskThread.started.connect(self.restoreDocsWorker.start)
+        self.restoreDocsWorker.notifyNSteps.connect(self.progressWindow.updateNSteps)
         self.restoreDocsWorker.notifyProgress.connect(self.progressWindow.updateStep)
         self.restoreDocsWorker.finished.connect(self.onRestoreDocsFinished)
         self.restoreDocsWorker.error.connect(self.errorRaised)
@@ -532,6 +534,8 @@ class RmExplorerWindow(QMainWindow):
         self.taskThread.started.disconnect(self.backupDocsWorker.start)
         self.backupDocsWorker.warning.disconnect(self.warningRaised)
         self.backupDocsWorker.finished.disconnect(self.onBackupDocsFinished)
+        self.backupDocsWorker.notifyNSteps.disconnect(self.progressWindow.updateNSteps)
+        self.backupDocsWorker.notifyProgress.disconnect(self.progressWindow.updateStep)
 
         self.taskThread.quit()
         self.backupDocsWorker.deleteLater()
@@ -555,6 +559,8 @@ class RmExplorerWindow(QMainWindow):
         self.taskThread.started.disconnect(self.restoreDocsWorker.start)
         self.restoreDocsWorker.error.disconnect(self.errorRaised)
         self.restoreDocsWorker.finished.disconnect(self.onRestoreDocsFinished)
+        self.restoreDocsWorker.notifyNSteps.disconnect(self.progressWindow.updateNSteps)
+        self.restoreDocsWorker.notifyProgress.disconnect(self.progressWindow.updateStep)
 
         self.taskThread.quit()
         self.restoreDocsWorker.deleteLater()

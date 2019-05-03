@@ -38,13 +38,14 @@ from PyQt5.QtCore import QObject
 # mature enough.
 from PyQt5.QtCore import pyqtSignal as Signal
 
-import constants
+import tools
 from settings import Settings
 
 
 class RestoreDocsWorker(QObject):
 
     notifyProgress = Signal(int)
+    notifyNSteps = Signal(int)
     error = Signal(str)
     finished = Signal()
 
@@ -55,6 +56,12 @@ class RestoreDocsWorker(QObject):
 
         self._settings = Settings(masterKey)
         self._srcFolder = srcFolder
+
+
+    def _countElems(self, path):
+        """Returns the number of files and folders in a local directory"""
+
+        return sum([len(files) + len(dirs) for _, dirs, files in os.walk(path)])
 
 
     def _rmDir(self, sftpClient, dirPath):
@@ -92,31 +99,24 @@ class RestoreDocsWorker(QObject):
     def start(self):
 
         try:
-            with paramiko.SSHClient() as ssh:
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(self._settings.value('TabletHostname', type=str),
-                            username=self._settings.value('SSHUsername', type=str),
-                            password=self._settings.encryptedStrValue('SSHPassword'),
-                            timeout=constants.SSHTimeout,
-                            banner_timeout=constants.SSHTimeout,
-                            allow_agent=False)
-
-                with ssh.open_sftp() as sftp:
-                    destDir = self._settings.value('TabletDocumentsDir', type=str)
-                    try:
-                        attr = sftp.lstat(destDir)
-                    except FileNotFoundError:
-                        # Change the error raised so that it contains path info.
-                        raise FileNotFoundError(errno.ENOENT,
-                                                os.strerror(errno.ENOENT),
-                                                destDir)
-                    if not stat.S_ISDIR(attr.st_mode):
-                        raise Exception('Remote path "%s" is not a folder.' % destDir)
-                    self._rmDir(sftp, destDir)
-                    sftp.mkdir(destDir)
-                    self._recursiveUpload(sftp,
-                                          self._srcFolder,
-                                          destDir)
+            with tools.openSftp(self._settings) as sftp:
+                destDir = self._settings.value('TabletDocumentsDir', type=str)
+                nFiles = self._countElems(self._srcFolder)
+                self.notifyNSteps.emit(nFiles)
+                try:
+                    attr = sftp.lstat(destDir)
+                except FileNotFoundError:
+                    # Change the error raised so that it contains path info.
+                    raise FileNotFoundError(errno.ENOENT,
+                                            os.strerror(errno.ENOENT),
+                                            destDir)
+                if not stat.S_ISDIR(attr.st_mode):
+                    raise Exception('Remote path "%s" is not a folder.' % destDir)
+                self._rmDir(sftp, destDir)
+                sftp.mkdir(destDir)
+                self._recursiveUpload(sftp,
+                                      self._srcFolder,
+                                      destDir)
         except FileNotFoundError as e:
             self.error.emit(str(e))
         except socket.timeout:

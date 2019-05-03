@@ -74,6 +74,12 @@ class ProgressWindow(QDialog):
         pass
 
 
+    def updateNSteps(self, nSteps):
+
+        self.nSteps = nSteps
+        self.refresh()
+
+
     def updateStep(self, step):
 
         self.step = step
