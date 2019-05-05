@@ -407,7 +407,7 @@ class RmExplorerWindow(QMainWindow):
             return
 
         self.progressWindow = ProgressWindow(self)
-        self.progressWindow.setWindowTitle("Uploading backup...")
+        self.progressWindow.setWindowTitle("Restoring backup...")
         self.progressWindow.open()
 
         self.settings.sync()
