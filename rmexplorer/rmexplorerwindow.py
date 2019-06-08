@@ -184,7 +184,8 @@ class RmExplorerWindow(QMainWindow):
 
         url = self.settings.value('listFolderURL', type=str) % dirId
         try:
-            data = urllib.request.urlopen(url).read()
+            res = urllib.request.urlopen(url)
+            data = res.read().decode(res.info().get_content_charset())
         except urllib.error.URLError as e:
             QMessageBox.critical(self, constants.AppName,
                                  'Could not go to directory "%s": URL error:\n%s' % (dirId, e.reason))
@@ -259,7 +260,8 @@ class RmExplorerWindow(QMainWindow):
         def listFiles(ext, baseFolderId, baseFolderPath, filesList):
             url = self.settings.value('listFolderURL', type=str) % baseFolderId
             try:
-                data = urllib.request.urlopen(url).read()
+                res = urllib.request.urlopen(url)
+                data = res.read().decode(res.info().get_content_charset())
             except urllib.error.URLError as e:
                 warningBox = QMessageBox(self)
                 warningBox.setText('URL error: %s. Aborted.' % e.reason)
