@@ -29,6 +29,7 @@ import os
 import io
 import socket
 import functools
+import json
 import contextlib
 import re
 import urllib.request
@@ -82,6 +83,31 @@ def openSftp(settings):
             sftp.close()
     finally:
         ssh.close()
+
+
+def listDir(dirId, settings):
+    """Obtain from a HTTP request the list of collections and documents of a collection"""
+
+    url = settings.value('listFolderURL', type=str) % dirId
+    res = urllib.request.urlopen(url)
+    data = res.read().decode(res.info().get_content_charset())
+
+    data = json.loads(data)
+
+    collections = []
+    docs = []
+    for elem in data:
+        id_ = elem['ID']
+        name = elem['VissibleName'] # yes, "Vissible"
+        if elem['Type'] == 'CollectionType':
+            collections.append((id_, name))
+        elif elem['Type'] == 'DocumentType':
+            docs.append((id_, name))
+    # Sort by name:
+    collections = sorted(collections, key=lambda elem: elem[1])
+    docs = sorted(docs, key=lambda elem: elem[1])
+
+    return collections, docs
 
 
 def downloadFile(fid, basePath, destRelPath, mode, settings):

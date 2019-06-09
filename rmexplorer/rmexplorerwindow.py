@@ -182,16 +182,12 @@ class RmExplorerWindow(QMainWindow):
 
     def goToDir(self, dirId, dirName):
 
-        url = self.settings.value('listFolderURL', type=str) % dirId
         try:
-            res = urllib.request.urlopen(url)
-            data = res.read().decode(res.info().get_content_charset())
+            collections, docs = tools.listDir(dirId, self.settings)
         except urllib.error.URLError as e:
             QMessageBox.critical(self, constants.AppName,
                                  'Could not go to directory "%s": URL error:\n%s' % (dirId, e.reason))
             return
-
-        data = json.loads(data)
 
         if dirId != self.curDir:
             # We are either moving up or down one level
@@ -224,16 +220,13 @@ class RmExplorerWindow(QMainWindow):
             self.dirNames = []
         self.fileIds = []
 
-        for elem in data:
-            id_ = elem['ID']
-            name = elem['VissibleName'] # yes, "Vissible"
-            if elem['Type'] == 'CollectionType':
-                self.dirIds.append(id_)
-                self.dirNames.append(name)
-                self.dirsList.addItem(name)
-            elif elem['Type'] == 'DocumentType':
-                self.fileIds.append(id_)
-                self.filesList.addItem(name)
+        for id_, name in collections:
+            self.dirIds.append(id_)
+            self.dirNames.append(name)
+            self.dirsList.addItem(name)
+        for id_, name in docs:
+            self.fileIds.append(id_)
+            self.filesList.addItem(name)
 
 
     def downloadFile(self, basePath, fileDesc, mode):
