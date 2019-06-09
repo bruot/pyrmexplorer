@@ -579,10 +579,14 @@ class RmExplorerWindow(QMainWindow):
 
     def about(self):
 
-        msg = """pyrmexplorer: Explorer for Remarkable tablets<br/><br/>
+        msg = """<b>pyrmexplorer: Explorer for Remarkable tablets</b><br/><br/>
 Version %s<br/><br/>
 Copyright (C) 2019 Nicolas Bruot (<a href="https://www.bruot.org/hp/">https://www.bruot.org/hp/</a>)<br/><br/>
-pyrmexplorer is released under the terms of the GNU General Public License (GPL) v3.<br/>
+
+Some parts of this software are copyright other contributors. Refer to the individual source files for details.<br/><br/>
+
+pyrmexplorer is released under the terms of the GNU General Public License (GPL) v3.<br/><br/>
+
 The source code is available at <a href=\"https://github.com/bruot/pyrmexplorer/\">https://github.com/bruot/pyrmexplorer/</a>.<br/><br/>
 """
         msg = msg % __version__

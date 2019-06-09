@@ -25,9 +25,11 @@
 """GUI explorer for Remarkable tablets"""
 
 
+import os
 import sys
 
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QIcon
 
 from rmexplorerwindow import RmExplorerWindow
 
@@ -37,6 +39,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setApplicationName('pyrMExplorer')
     app.setOrganizationName('rMTools')
+    thisDir = os.path.dirname(os.path.abspath(__file__))
+    app.setWindowIcon(QIcon(os.path.join(thisDir, 'icon.png')))
     mainWindow = RmExplorerWindow()
     mainWindow.show()
     sys.exit(app.exec_())

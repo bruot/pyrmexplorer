@@ -2,6 +2,9 @@ pyrmexplorer: GUI explorer for Remarkable tablets
 
 Copyright 2019 Nicolas Bruot (https://www.bruot.org/hp/)
 
+Some parts of this software are copyright other contributors.  Refer
+to the individual source files for details.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 pyrmexplorer is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
