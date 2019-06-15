@@ -264,7 +264,8 @@ class RmExplorerWindow(QMainWindow):
             url = self.settings.value('listFolderURL', type=str) % baseFolderId
             try:
                 res = urllib.request.urlopen(url)
-                data = res.read().decode(res.info().get_content_charset())
+                encoding = res.info().get_content_charset() or constants.HttpDefaultEncoding
+                data = res.read().decode(encoding)
             except urllib.error.URLError as e:
                 warningBox = QMessageBox(self)
                 warningBox.setText('URL error: %s. Aborted.' % e.reason)

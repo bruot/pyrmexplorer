@@ -32,6 +32,7 @@ HttpTimeoutMax = 999
 HttpShortTimeoutMin = 0
 HttpShortTimeoutMax = 60
 HttpShortTimeoutMaxDecimals = 3
+HttpDefaultEncoding = 'iso-8859-1'
 PngExportDpiMin = 30
 PngExportDpiMax = 10000
 PassphraseMinStrength = 0.7
