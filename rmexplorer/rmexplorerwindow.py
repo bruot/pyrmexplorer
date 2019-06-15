@@ -487,13 +487,13 @@ class RmExplorerWindow(QMainWindow):
 
     def dirsListContextMenuRequested(self, pos):
 
-        if self.dirsList.count() > 0:
+        if len(self.dirsList.selectedItems()) > 0:
             self.dirsListContextMenu.exec(self.dirsList.mapToGlobal(pos))
 
 
     def filesListContextMenuRequested(self, pos):
 
-        if self.filesList.count() > 0:
+        if len(self.filesList.selectedItems()) > 0:
             self.filesListContextMenu.exec(self.filesList.mapToGlobal(pos))
 
 
