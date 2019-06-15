@@ -34,7 +34,8 @@ import urllib.error
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtWidgets import (qApp, QWidget, QMainWindow, QMenu, QAction,
                              QLabel, QListWidget, QGridLayout, QVBoxLayout,
-                             QDialog, QFileDialog, QMessageBox)
+                             QDialog, QFileDialog, QMessageBox,
+                             QAbstractItemView)
 
 import constants
 from _version import __version__
@@ -61,12 +62,16 @@ class RmExplorerWindow(QMainWindow):
         self.makeMenus()
 
         self.dirsList = QListWidget(self)
+        self.dirsList.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.dirsList.itemDoubleClicked.connect(self.dirsListItemDoubleClicked)
         self.dirsList.setContextMenuPolicy(Qt.CustomContextMenu)
         self.dirsList.customContextMenuRequested.connect(self.dirsListContextMenuRequested)
 
         self.filesList = QListWidget(self)
+        self.filesList.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.filesList.itemDoubleClicked.connect(self.filesListItemDoubleClicked)
+        self.filesList.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.filesList.customContextMenuRequested.connect(self.filesListContextMenuRequested)
 
         self.curDirLabel = QLabel(self)
 
@@ -176,8 +181,13 @@ class RmExplorerWindow(QMainWindow):
 
         # Context menu of the directories QListWidget
         self.dirsListContextMenu = QMenu(self)
-        downloadDirAct = self.dirsListContextMenu.addAction('&Download')
-        downloadDirAct.triggered.connect(self.downloadDirClicked)
+        downloadDirsAct = self.dirsListContextMenu.addAction('&Download')
+        downloadDirsAct.triggered.connect(self.downloadDirsClicked)
+
+        # Context menu of the files QListWidget
+        self.filesListContextMenu = QMenu(self)
+        downloadFilesAct = self.filesListContextMenu.addAction('&Download')
+        downloadFilesAct.triggered.connect(self.downloadFilesClicked)
 
 
     def goToDir(self, dirId, dirName):
@@ -248,7 +258,7 @@ class RmExplorerWindow(QMainWindow):
                                          constants.StatusBarMsgDisplayDuration)
 
 
-    def downloadDir(self, directory, rootName):
+    def downloadDirs(self, dirs):
 
         def listFiles(ext, baseFolderId, baseFolderPath, filesList):
             url = self.settings.value('listFolderURL', type=str) % baseFolderId
@@ -287,7 +297,48 @@ class RmExplorerWindow(QMainWindow):
                 self.settings.setValue('lastDir', os.path.split(folder)[0])
                 # Construct files list
                 dlList = []
-                listFiles(ext, directory, rootName, dlList)
+                for dir_id, dir_name in dirs:
+                    listFiles(ext, dir_id, dir_name, dlList)
+
+                self.progressWindow = ProgressWindow(self)
+                self.progressWindow.setWindowTitle("Downloading...")
+                self.progressWindow.nSteps = len(dlList)
+                self.progressWindow.open()
+
+                self.settings.sync()
+                self.currentWarning = ''
+                self.downloadFilesWorker = DownloadFilesWorker(folder,
+                                                               dlList,
+                                                               mode)
+                self.taskThread = QThread()
+                self.downloadFilesWorker.moveToThread(self.taskThread)
+                self.taskThread.started.connect(self.downloadFilesWorker.start)
+                self.downloadFilesWorker.notifyProgress.connect(self.progressWindow.updateStep)
+                self.downloadFilesWorker.finished.connect(self.onDownloadFilesFinished)
+                self.downloadFilesWorker.warning.connect(self.warningRaised)
+                self.taskThread.start()
+            else:
+                self.statusBar().showMessage('Cancelled.',
+                                             constants.StatusBarMsgDisplayDuration)
+
+
+    def downloadFiles(self, files):
+
+        dialog = SaveOptsDialog(self.settings, self)
+        if dialog.exec() == QDialog.Accepted:
+            mode = dialog.getSaveMode()
+            ext = mode
+            # Ask for destination folder
+            folder = QFileDialog.getExistingDirectory(self,
+                                                      'Save directory',
+                                                      self.settings.value('lastDir', type=str),
+                                                      QFileDialog.ShowDirsOnly
+                                                      | QFileDialog.DontResolveSymlinks)
+            if folder:
+                self.settings.setValue('lastDir', os.path.split(folder)[0])
+                # Construct files list
+                dlList = tuple((id_, os.path.join(folder, '%s.%s' % (name, ext)))
+                               for id_, name in files)
 
                 self.progressWindow = ProgressWindow(self)
                 self.progressWindow.setWindowTitle("Downloading...")
@@ -440,6 +491,12 @@ class RmExplorerWindow(QMainWindow):
             self.dirsListContextMenu.exec(self.dirsList.mapToGlobal(pos))
 
 
+    def filesListContextMenuRequested(self, pos):
+
+        if self.filesList.count() > 0:
+            self.filesListContextMenu.exec(self.filesList.mapToGlobal(pos))
+
+
     def filesListItemDoubleClicked(self, item):
 
         fid = self.fileIds[self.filesList.currentRow()]
@@ -468,10 +525,19 @@ class RmExplorerWindow(QMainWindow):
                                          constants.StatusBarMsgDisplayDuration)
 
 
-    def downloadDirClicked(self):
+    def downloadFilesClicked(self):
 
-        idx = self.dirsList.currentRow()
-        self.downloadDir(self.dirIds[idx], self.dirNames[idx])
+        items = self.filesList.selectionModel().selectedIndexes()
+        files = tuple((self.fileIds[i.row()],
+                       self.filesList.item(i.row()).text()) for i in items)
+        self.downloadFiles(files)
+
+
+    def downloadDirsClicked(self):
+
+        items = self.dirsList.selectionModel().selectedIndexes()
+        dirs = tuple((self.dirIds[i.row()], self.dirNames[i.row()]) for i in items)
+        self.downloadDirs(dirs)
 
 
     def downloadAll(self):
