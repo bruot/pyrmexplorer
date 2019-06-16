@@ -25,6 +25,7 @@
 """Qt dialog to edit settings"""
 
 
+from PyQt5.QtCore import QLocale
 from PyQt5.QtWidgets import (QLabel, QLineEdit, QPushButton, QGroupBox,
                              QGridLayout, QVBoxLayout, QMessageBox, QDialog)
 from PyQt5.QtGui import QValidator, QIntValidator, QDoubleValidator
@@ -55,16 +56,21 @@ class SettingsDialog(OKCancelDialog):
         urlGroupBox.setLayout(urlLayout)
 
         miscGroupBox = QGroupBox('Miscellaneous', self)
-        self.httpTimeoutLE = QLineEdit(str(self.settings.value('HTTPTimeout', type=int)), self)
+        locale = QLocale()
+        val = locale.toString(self.settings.value('HTTPTimeout', type=int))
+        self.httpTimeoutLE = QLineEdit(val, self)
         self.httpTimeoutLE.setValidator(QIntValidator(constants.HttpTimeoutMin,
                                                       constants.HttpTimeoutMax,
                                                       self))
-        self.httpShortTimeoutLE = QLineEdit(str(self.settings.value('HTTPShortTimeout', type=float)), self)
+        val = locale.toString(self.settings.value('HTTPShortTimeout', type=float),
+                              precision=constants.HttpShortTimeoutMaxDecimals)
+        self.httpShortTimeoutLE = QLineEdit(val, self)
         self.httpShortTimeoutLE.setValidator(QDoubleValidator(constants.HttpShortTimeoutMin,
                                                               constants.HttpShortTimeoutMax,
                                                               constants.HttpShortTimeoutMaxDecimals,
                                                               self))
-        self.pngResolutionLE = QLineEdit(str(self.settings.value('PNGResolution', type=int)), self)
+        val = locale.toString(self.settings.value('PNGResolution', type=int))
+        self.pngResolutionLE = QLineEdit(val, self)
         self.pngResolutionLE.setValidator(QIntValidator(constants.PngExportDpiMin,
                                                         constants.PngExportDpiMax,
                                                         self))
@@ -202,16 +208,17 @@ class SettingsDialog(OKCancelDialog):
 
     def updateSettings(self):
 
+        locale = QLocale()
         self.settings.setValue('listFolderURL',
                                str(self.listFolderUrlLE.text()))
         self.settings.setValue('downloadURL',
                                str(self.downloadUrlLE.text()))
         self.settings.setValue('HTTPTimeout',
-                               int(self.httpTimeoutLE.text()))
+                               locale.toUInt(self.httpTimeoutLE.text())[0])
         self.settings.setValue('HTTPShortTimeout',
-                               float(self.httpShortTimeoutLE.text()))
+                               str(locale.toDouble(self.httpShortTimeoutLE.text())[0]))
         self.settings.setValue('PNGResolution',
-                               int(self.pngResolutionLE.text()))
+                               locale.toUInt(self.pngResolutionLE.text())[0])
         self.settings.setValue('TabletHostname',
                                str(self.sshHostLE.text()))
         self.settings.setValue('SSHUsername',
