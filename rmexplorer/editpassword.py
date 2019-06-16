@@ -27,7 +27,7 @@
 
 from PyQt5.QtWidgets import QDialog
 
-from editpassworddialog import EditPasswordDialog
+from rmexplorer.editpassworddialog import EditPasswordDialog
 
 
 class EditPassword():

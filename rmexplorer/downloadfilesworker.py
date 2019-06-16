@@ -32,8 +32,8 @@ from PyQt5.QtCore import QObject
 # mature enough.
 from PyQt5.QtCore import pyqtSignal as Signal
 
-from settings import Settings
-import tools
+from rmexplorer.settings import Settings
+import rmexplorer.tools as tools
 
 
 class DownloadFilesWorker(QObject):

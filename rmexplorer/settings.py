@@ -33,11 +33,11 @@ import Cryptodome.Protocol.KDF
 from PyQt5.QtCore import QSettings, QStandardPaths, QCoreApplication
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
-import tools
-from _version import __version__
-import constants
-import migrations
-from askpassphrasedialog import AskPassphraseDialog
+import rmexplorer.tools as tools
+from rmexplorer._version import __version__
+import rmexplorer.constants as constants
+import rmexplorer.migrations as migrations
+from rmexplorer.askpassphrasedialog import AskPassphraseDialog
 
 
 class Settings():

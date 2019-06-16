@@ -29,8 +29,8 @@ import password_strength
 
 from PyQt5.QtWidgets import QLabel, QLineEdit, QGridLayout, QMessageBox
 
-import constants
-from okcanceldialog import OKCancelDialog
+import rmexplorer.constants as constants
+from rmexplorer.okcanceldialog import OKCancelDialog
 
 
 class ChangePassphraseDialog(OKCancelDialog):

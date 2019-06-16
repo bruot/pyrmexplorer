@@ -30,10 +30,10 @@ from PyQt5.QtWidgets import (QLabel, QLineEdit, QPushButton, QGroupBox,
                              QGridLayout, QVBoxLayout, QMessageBox, QDialog)
 from PyQt5.QtGui import QValidator, QIntValidator, QDoubleValidator
 
-from okcanceldialog import OKCancelDialog
-from changepassphrasedialog import ChangePassphraseDialog
-from editpassword import EditPassword
-import constants
+from rmexplorer.okcanceldialog import OKCancelDialog
+from rmexplorer.changepassphrasedialog import ChangePassphraseDialog
+from rmexplorer.editpassword import EditPassword
+import rmexplorer.constants as constants
 
 
 class SettingsDialog(OKCancelDialog):

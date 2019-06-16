@@ -37,8 +37,8 @@ from PyQt5.QtCore import QObject
 # mature enough.
 from PyQt5.QtCore import pyqtSignal as Signal
 
-import tools
-from settings import Settings
+import rmexplorer.tools as tools
+from rmexplorer.settings import Settings
 
 
 class BackupDocsWorker(QObject):

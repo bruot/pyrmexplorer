@@ -31,7 +31,7 @@ import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon
 
-from rmexplorerwindow import RmExplorerWindow
+from rmexplorer.rmexplorerwindow import RmExplorerWindow
 
 
 if __name__ == '__main__':

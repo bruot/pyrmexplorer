@@ -36,7 +36,7 @@ import urllib.request
 import paramiko
 import wand.image
 
-import constants
+import rmexplorer.constants as constants
 
 
 class OperationCancelled(Exception):

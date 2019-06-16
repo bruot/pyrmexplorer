@@ -37,16 +37,16 @@ from PyQt5.QtWidgets import (qApp, QWidget, QMainWindow, QMenu, QAction,
                              QDialog, QFileDialog, QMessageBox,
                              QAbstractItemView)
 
-import constants
-from _version import __version__
-from saveoptsdialog import SaveOptsDialog
-from settingsdialog import SettingsDialog
-from downloadfilesworker import DownloadFilesWorker
-from backupdocsworker import BackupDocsWorker
-from restoredocsworker import RestoreDocsWorker
-from progresswindow import ProgressWindow
-from settings import Settings
-import tools
+import rmexplorer.constants as constants
+from rmexplorer._version import __version__
+from rmexplorer.saveoptsdialog import SaveOptsDialog
+from rmexplorer.settingsdialog import SettingsDialog
+from rmexplorer.downloadfilesworker import DownloadFilesWorker
+from rmexplorer.backupdocsworker import BackupDocsWorker
+from rmexplorer.restoredocsworker import RestoreDocsWorker
+from rmexplorer.progresswindow import ProgressWindow
+from rmexplorer.settings import Settings
+import rmexplorer.tools as tools
 
 
 class RmExplorerWindow(QMainWindow):

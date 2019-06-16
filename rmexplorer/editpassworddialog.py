@@ -27,8 +27,8 @@
 
 from PyQt5.QtWidgets import QLabel, QLineEdit, QVBoxLayout
 
-import constants
-from okcanceldialog import OKCancelDialog
+import rmexplorer.constants as constants
+from rmexplorer.okcanceldialog import OKCancelDialog
 
 
 class EditPasswordDialog(OKCancelDialog):

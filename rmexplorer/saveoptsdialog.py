@@ -27,7 +27,7 @@
 
 from PyQt5.QtWidgets import QVBoxLayout, QRadioButton
 
-from okcanceldialog import OKCancelDialog
+from rmexplorer.okcanceldialog import OKCancelDialog
 
 
 class SaveOptsDialog(OKCancelDialog):
