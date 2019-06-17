@@ -194,9 +194,10 @@ class RmExplorerWindow(QMainWindow):
 
         try:
             collections, docs = tools.listDir(dirId, self.settings)
-        except urllib.error.URLError as e:
+        except (urllib.error.URLError, socket.timeout) as e:
+            msg = getattr(e, 'reason', 'timeout')
             QMessageBox.critical(self, constants.AppName,
-                                 'Could not go to directory "%s": URL error:\n%s' % (dirId, e.reason))
+                                 'Could not go to directory "%s": URL error:\n%s' % (dirId, msg))
             return
 
         if dirId != self.curDir:
@@ -248,9 +249,10 @@ class RmExplorerWindow(QMainWindow):
         self.statusBar().showMessage('Downloading %s...' % os.path.split(destRelPath)[1])
         try:
             tools.downloadFile(fid, basePath, destRelPath, mode, self.settings)
-        except urllib.error.URLError as e:
+        except (urllib.error.URLError, socket.timeout) as e:
+            msg = getattr(e, 'reason', 'timeout')
             QMessageBox.error(self, constants.AppName,
-                                'URL error: %s. Aborted.' % e.reason)
+                                'URL error: %s. Aborted.' % msg)
             self.statusBar().showMessage('Download error.',
                                          constants.StatusBarMsgDisplayDuration)
         else:
@@ -266,9 +268,10 @@ class RmExplorerWindow(QMainWindow):
                 res = urllib.request.urlopen(url)
                 encoding = res.info().get_content_charset() or constants.HttpDefaultEncoding
                 data = res.read().decode(encoding)
-            except urllib.error.URLError as e:
+            except (urllib.error.URLError, socket.timeout) as e:
                 warningBox = QMessageBox(self)
-                warningBox.setText('URL error: %s. Aborted.' % e.reason)
+                msg = getattr(e, 'reason', 'timeout')
+                warningBox.setText('URL error: %s. Aborted.' % msg)
                 warningBox.setIcon(QMessageBox.Warning)
                 warningBox.exec()
                 self.statusBar().showMessage('Download error.',
