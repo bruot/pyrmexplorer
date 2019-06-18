@@ -1,2 +1,6 @@
 *~
 */__pycache__/*
+pyinstaller/build/
+pyinstaller/dist/
+pyinstaller/rmexplorer.spec
+

@@ -22,39 +22,17 @@
 # along with pyrmexplorer.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""GUI explorer for Remarkable tablets"""
+"""rMExplorer launch script for pyinstaller
+
+Script that serves as the input script to pyinstaller for compilation of an executable.  Do not use it to launch rMExplorer by invoking python.
+"""
 
 
 import os
 import sys
+sys.path.append(os.path.join(os.path.split(__file__)[0], '..'))
 
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QIcon
-
-from rmexplorer.rmexplorerwindow import RmExplorerWindow
-
-def resource_path(relative_path):
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.abspath("."), relative_path)
+from rmexplorer.__main__ import main
 
 
-def main(use_resources=False):
-
-    app = QApplication(sys.argv)
-    app.setApplicationName('pyrMExplorer')
-    app.setOrganizationName('rMTools')
-    if use_resources:
-        icon_path = resource_path('icon.ico')
-    else:
-        icon_path =os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                'icon.ico')
-    app.setWindowIcon(QIcon(icon_path))
-    mainWindow = RmExplorerWindow()
-    mainWindow.show()
-    sys.exit(app.exec_())
-
-
-if __name__ == '__main__':
-
-    main()
+main(use_resources=True)
