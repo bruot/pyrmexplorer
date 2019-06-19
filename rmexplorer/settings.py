@@ -58,6 +58,7 @@ class Settings():
         #
         # Special treatment for _version
         if not self._settings.contains('version'):
+            # Program is likely being launched for the first time
             self._settings.setValue('version', __version__)
         else:
             settings_ver = tools.Version(self._settings.value('version'))
@@ -73,6 +74,8 @@ class Settings():
                 # Make sure version is updated in each migration.
                 if settings_ver < tools.Version('1.1.0'):
                     migrations.settings_v1_1_0_migration(self)
+                if settings_ver < tools.Version('1.2.0'):
+                    migrations.settings_v1_2_0_migration(self)
 
         self._masterKey = masterKey
         self._set_defaults()
@@ -238,6 +241,7 @@ class Settings():
         """Set settings default values for fields that do not already exist"""
 
         # Hidden settings
+        self._get_or_set('version', 'pdf')
         self._get_or_set('lastDir',
                          QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation))
         self._get_or_set('lastSSHBackupDir',
@@ -252,7 +256,7 @@ class Settings():
         self._get_or_set('downloadURL', 'http://10.11.99.1/download/%s/placeholder')
         self._get_or_set('listFolderURL', 'http://10.11.99.1/documents/%s')
         self._get_or_set('HTTPTimeout', 60)
-        self._get_or_set('HTTPShortTimeout', 0.5)
+        self._get_or_set('HTTPShortTimeout', 1.0)
         self._get_or_set('PNGResolution', 360)
         self._get_or_set('TabletHostname', '')
         self._get_or_set('SSHUsername', 'root')

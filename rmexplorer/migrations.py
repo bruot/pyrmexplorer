@@ -68,3 +68,20 @@ def settings_v1_1_0_migration(settings):
 
     # Update version
     settings.setValue('version', '1.1.0')
+
+
+def settings_v1_2_0_migration(settings):
+    """Settings upgrade to v1.2.0
+
+    This includes:
+
+        - Increasing HTTPShortTimeout to 1 s if the user left it to the old
+          default value of 0.5 s.
+    """
+
+    if settings.value('HTTPShortTimeout', type=float) == 0.5:
+        # Increase HTTPShortTimeout
+        settings.setValue('HTTPShortTimeout', 1.0)
+
+    # Update version
+    settings.setValue('version', '1.2.0')
