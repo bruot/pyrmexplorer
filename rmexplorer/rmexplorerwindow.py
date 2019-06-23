@@ -546,7 +546,7 @@ class RmExplorerWindow(QMainWindow):
 
     def downloadAll(self):
 
-        self.downloadDir('', '')
+        self.downloadDirs((('', ''),))
 
 
     def warningRaised(self, msg):
