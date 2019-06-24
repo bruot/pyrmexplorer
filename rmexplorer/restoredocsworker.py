@@ -29,7 +29,6 @@ import os
 import errno
 import stat
 import posixpath
-from datetime import datetime
 import socket
 import paramiko
 
