@@ -614,6 +614,8 @@ class RmExplorerWindow(QMainWindow):
         self.downloadFilesWorker.warning.disconnect(self.warningRaised)
         self.downloadFilesWorker.finished.disconnect(self.onDownloadFilesFinished)
 
+        self.progressWindow.deleteLater()
+
         # Not sure that the following is entirely safe.  For example, what if a
         # new thread is created before the old objects are actually deleted?
         self.taskThread.quit()
@@ -637,6 +639,8 @@ class RmExplorerWindow(QMainWindow):
         self.uploadDocsWorker.notifyProgress.disconnect(self.progressWindow.updateStep)
         self.uploadDocsWorker.warning.disconnect(self.warningRaised)
         self.uploadDocsWorker.finished.disconnect(self.onUploadDocsFinished)
+
+        self.progressWindow.deleteLater()
 
         # Not sure that the following is entirely safe.  For example, what if a
         # new thread is created before the old objects are actually deleted?
@@ -672,6 +676,8 @@ class RmExplorerWindow(QMainWindow):
         self.backupDocsWorker.notifyNSteps.disconnect(self.progressWindow.updateNSteps)
         self.backupDocsWorker.notifyProgress.disconnect(self.progressWindow.updateStep)
 
+        self.progressWindow.deleteLater()
+
         self.taskThread.quit()
         self.backupDocsWorker.deleteLater()
         self.taskThread.deleteLater()
@@ -696,6 +702,8 @@ class RmExplorerWindow(QMainWindow):
         self.restoreDocsWorker.finished.disconnect(self.onRestoreDocsFinished)
         self.restoreDocsWorker.notifyNSteps.disconnect(self.progressWindow.updateNSteps)
         self.restoreDocsWorker.notifyProgress.disconnect(self.progressWindow.updateStep)
+
+        self.progressWindow.deleteLater()
 
         self.taskThread.quit()
         self.restoreDocsWorker.deleteLater()
