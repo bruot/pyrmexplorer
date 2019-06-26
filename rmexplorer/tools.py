@@ -33,10 +33,15 @@ import json
 import contextlib
 import re
 import urllib.request
+import requests
 import paramiko
 import wand.image
 
 import rmexplorer.constants as constants
+
+
+class UploadError(Exception):
+    pass
 
 
 class OperationCancelled(Exception):
@@ -133,6 +138,21 @@ def downloadFile(fid, basePath, destRelPath, mode, settings):
                               resolution=settings.value('PNGResolution', type=int)) as img:
             with img.convert('png') as converted:
                 converted.save(filename=destPath)
+
+
+def uploadFile(path, settings):
+    """Uploads a local PDF or EPUB file to the tablet"""
+
+    filename = os.path.split(path)[1]
+    basename, ext = os.path.splitext(filename)
+
+    with open(path, 'rb') as f:
+        req = requests.post(settings.value('uploadURL', type=str),
+                            files={'file': f},
+                            timeout=settings.value('HTTPTimeout', type=int))
+        status = req.status_code
+        if status != 200:
+            raise UploadError('Server responded with status code %d and message: "%s"' % (status, req.text))
 
 
 def isValidBackupDir(folder):

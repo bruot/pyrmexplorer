@@ -42,6 +42,7 @@ from rmexplorer._version import __version__
 from rmexplorer.saveoptsdialog import SaveOptsDialog
 from rmexplorer.settingsdialog import SettingsDialog
 from rmexplorer.downloadfilesworker import DownloadFilesWorker
+from rmexplorer.uploaddocsworker import UploadDocsWorker
 from rmexplorer.backupdocsworker import BackupDocsWorker
 from rmexplorer.restoredocsworker import RestoreDocsWorker
 from rmexplorer.progresswindow import ProgressWindow
@@ -103,6 +104,7 @@ class RmExplorerWindow(QMainWindow):
 
         self.progressWindow = None
         self.downloadFilesWorker = None
+        self.uploadDocsWorker = None
         self.backupDocsWorker = None
         self.restoreDocsWorker = None
         self.taskThread = None
@@ -127,6 +129,11 @@ class RmExplorerWindow(QMainWindow):
         menubar = self.menuBar()
 
         # Explorer menu
+        uploadDocsAct = QAction('&Upload documents', self)
+        uploadDocsAct.setShortcut('Ctrl+U')
+        uploadDocsAct.setStatusTip('Upload documents from the computer to the tablet.')
+        uploadDocsAct.triggered.connect(self.uploadDocs)
+        #
         dlAllAct = QAction('&Download all', self)
         dlAllAct.setShortcut('Ctrl+D')
         dlAllAct.setStatusTip('Download all files to a local folder.')
@@ -148,9 +155,12 @@ class RmExplorerWindow(QMainWindow):
         exitAct.triggered.connect(qApp.quit)
         #
         explorerMenu = menubar.addMenu('&Explorer')
+        explorerMenu.addAction(uploadDocsAct)
         explorerMenu.addAction(dlAllAct)
         explorerMenu.addAction(refreshAct)
+        explorerMenu.addSeparator()
         explorerMenu.addAction(settingsAct)
+        explorerMenu.addSeparator()
         explorerMenu.addAction(exitAct)
 
         # SSH menu
@@ -549,6 +559,40 @@ class RmExplorerWindow(QMainWindow):
         self.downloadDirs((('', ''),))
 
 
+    def uploadDocs(self):
+
+        defaultDir = (self.settings.value('lastDir', type=str))
+        paths = QFileDialog.getOpenFileNames(self,
+                                             'Select files to upload',
+                                             defaultDir,
+                                             'Documents (*.pdf *.epub)')[0]
+        nFiles = len(paths)
+        if nFiles == 0:
+            self.statusBar().showMessage('Cancelled.',
+                                         constants.StatusBarMsgDisplayDuration)
+            return
+
+        self.settings.setValue('lastDir', os.path.split(paths[0])[0])
+
+        self.progressWindow = ProgressWindow(self)
+        self.progressWindow.setWindowTitle("Uploading documents...")
+        self.progressWindow.nSteps = nFiles
+        self.progressWindow.open()
+
+        self.settings.sync()
+        self.currentWarning = ''
+        self.uploadDocsWorker = UploadDocsWorker(paths)
+
+        self.taskThread = QThread()
+        self.uploadDocsWorker.moveToThread(self.taskThread)
+        self.taskThread.started.connect(self.uploadDocsWorker.start)
+        self.uploadDocsWorker.notifyNSteps.connect(self.progressWindow.updateNSteps)
+        self.uploadDocsWorker.notifyProgress.connect(self.progressWindow.updateStep)
+        self.uploadDocsWorker.finished.connect(self.onUploadDocsFinished)
+        self.uploadDocsWorker.warning.connect(self.warningRaised)
+        self.taskThread.start()
+
+
     def warningRaised(self, msg):
 
         self.currentWarning = msg
@@ -580,6 +624,31 @@ class RmExplorerWindow(QMainWindow):
             QMessageBox.warning(self, constants.AppName,
                                 'Errors were encountered:\n%s' % self.currentWarning)
         self.statusBar().showMessage('Finished downloading files.',
+                                     constants.StatusBarMsgDisplayDuration)
+
+
+    def onUploadDocsFinished(self):
+
+        self.progressWindow.hide()
+
+        self.taskThread.started.disconnect(self.uploadDocsWorker.start)
+        self.uploadDocsWorker.notifyNSteps.disconnect(self.progressWindow.updateNSteps)
+        self.uploadDocsWorker.notifyProgress.disconnect(self.progressWindow.updateStep)
+        self.uploadDocsWorker.warning.disconnect(self.warningRaised)
+        self.uploadDocsWorker.finished.disconnect(self.onUploadDocsFinished)
+
+        # Not sure that the following is entirely safe.  For example, what if a
+        # new thread is created before the old objects are actually deleted?
+        self.taskThread.quit()
+        self.uploadDocsWorker.deleteLater()
+        self.taskThread.deleteLater()
+        self.taskThread.wait()
+
+        if self.currentWarning:
+            QMessageBox.warning(self, constants.AppName,
+                                'Errors were encountered:\n%s' % self.currentWarning)
+        self.refreshLists()
+        self.statusBar().showMessage('Finished uploading files.',
                                      constants.StatusBarMsgDisplayDuration)
 
 
