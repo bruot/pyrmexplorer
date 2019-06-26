@@ -610,6 +610,7 @@ class RmExplorerWindow(QMainWindow):
         self.progressWindow.hide()
 
         self.taskThread.started.disconnect(self.downloadFilesWorker.start)
+        self.downloadFilesWorker.notifyProgress.disconnect(self.progressWindow.updateStep)
         self.downloadFilesWorker.warning.disconnect(self.warningRaised)
         self.downloadFilesWorker.finished.disconnect(self.onDownloadFilesFinished)
 
