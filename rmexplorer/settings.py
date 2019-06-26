@@ -76,6 +76,8 @@ class Settings():
                     migrations.settings_v1_1_0_migration(self)
                 if settings_ver < tools.Version('1.2.0'):
                     migrations.settings_v1_2_0_migration(self)
+                if settings_ver < tools.Version('1.3.0'):
+                    migrations.settings_v1_3_0_migration(self)
 
         self._masterKey = masterKey
         self._set_defaults()
@@ -254,6 +256,7 @@ class Settings():
         #
         # Settings on the Settings dialog
         self._get_or_set('downloadURL', 'http://10.11.99.1/download/%s/placeholder')
+        self._get_or_set('uploadURL', 'http://10.11.99.1/upload')
         self._get_or_set('listFolderURL', 'http://10.11.99.1/documents/%s')
         self._get_or_set('HTTPTimeout', 60)
         self._get_or_set('HTTPShortTimeout', 1.0)

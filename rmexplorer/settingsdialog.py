@@ -45,13 +45,16 @@ class SettingsDialog(OKCancelDialog):
         self.settings = settings
 
         urlGroupBox = QGroupBox('Query URLs', self)
-        self.listFolderUrlLE = QLineEdit(self.settings.value('listFolderURL', type=str), self)
         self.downloadUrlLE = QLineEdit(self.settings.value('downloadURL', type=str), self)
+        self.uploadUrlLE = QLineEdit(self.settings.value('uploadURL', type=str), self)
+        self.listFolderUrlLE = QLineEdit(self.settings.value('listFolderURL', type=str), self)
         urlLayout = QGridLayout()
         urlLayout.addWidget(QLabel('Download URL:'), 0, 0)
         urlLayout.addWidget(self.downloadUrlLE, 0, 1)
-        urlLayout.addWidget(QLabel('List folder URL:'), 1, 0)
-        urlLayout.addWidget(self.listFolderUrlLE, 1, 1)
+        urlLayout.addWidget(QLabel('Upload URL:'), 1, 0)
+        urlLayout.addWidget(self.uploadUrlLE, 1, 1)
+        urlLayout.addWidget(QLabel('List folder URL:'), 2, 0)
+        urlLayout.addWidget(self.listFolderUrlLE, 2, 1)
         urlLayout.setColumnMinimumWidth(1, 300)
         urlGroupBox.setLayout(urlLayout)
 
@@ -133,21 +136,26 @@ class SettingsDialog(OKCancelDialog):
     def ok(self):
         # Validate fields
         msgBox = QMessageBox(self)
-        if self.listFolderUrlLE.text() == '':
-            msgBox.setText("List folder URL cannot be empty.")
-            msgBox.exec()
-            return
-        elif not '%s' in self.listFolderUrlLE.text():
-            msgBox.setText("List folder URL must contain a \"%s\" placeholder.")
-            msgBox.exec()
-            return
-        #
         if self.downloadUrlLE.text() == '':
             msgBox.setText("Download URL cannot be empty.")
             msgBox.exec()
             return
         elif not '%s' in self.downloadUrlLE.text():
             msgBox.setText("Download URL must contain a \"%s\" placeholder.")
+            msgBox.exec()
+            return
+        #
+        if self.uploadUrlLE.text() == '':
+            msgBox.setText("Upload URL cannot be empty.")
+            msgBox.exec()
+            return
+        #
+        if self.listFolderUrlLE.text() == '':
+            msgBox.setText("List folder URL cannot be empty.")
+            msgBox.exec()
+            return
+        elif not '%s' in self.listFolderUrlLE.text():
+            msgBox.setText("List folder URL must contain a \"%s\" placeholder.")
             msgBox.exec()
             return
         #
@@ -209,10 +217,12 @@ class SettingsDialog(OKCancelDialog):
     def updateSettings(self):
 
         locale = QLocale()
-        self.settings.setValue('listFolderURL',
-                               str(self.listFolderUrlLE.text()))
         self.settings.setValue('downloadURL',
                                str(self.downloadUrlLE.text()))
+        self.settings.setValue('uploadURL',
+                               str(self.uploadUrlLE.text()))
+        self.settings.setValue('listFolderURL',
+                               str(self.listFolderUrlLE.text()))
         self.settings.setValue('HTTPTimeout',
                                locale.toUInt(self.httpTimeoutLE.text())[0])
         self.settings.setValue('HTTPShortTimeout',

@@ -85,3 +85,17 @@ def settings_v1_2_0_migration(settings):
 
     # Update version
     settings.setValue('version', '1.2.0')
+
+
+def settings_v1_3_0_migration(settings):
+    """Settings upgrade to v1.3.0
+
+    This includes:
+
+        - Adding uploadURL setting
+    """
+
+    settings.setValue('uploadURL', 'http://10.11.99.1/upload')
+
+    # Update version
+    settings.setValue('version', '1.3.0')
