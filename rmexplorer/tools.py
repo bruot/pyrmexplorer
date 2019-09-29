@@ -95,8 +95,7 @@ def listDir(dirId, settings):
 
     url = settings.value('listFolderURL', type=str) % dirId
     res = urllib.request.urlopen(url)
-    encoding = res.info().get_content_charset() or constants.HttpDefaultEncoding
-    data = res.read().decode(encoding)
+    data = res.read().decode(constants.HttpJsonEncoding)
 
     data = json.loads(data)
 

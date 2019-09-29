@@ -276,8 +276,7 @@ class RmExplorerWindow(QMainWindow):
             url = self.settings.value('listFolderURL', type=str) % baseFolderId
             try:
                 res = urllib.request.urlopen(url)
-                encoding = res.info().get_content_charset() or constants.HttpDefaultEncoding
-                data = res.read().decode(encoding)
+                data = res.read().decode(constants.HttpJsonEncoding)
             except (urllib.error.URLError, socket.timeout) as e:
                 warningBox = QMessageBox(self)
                 msg = getattr(e, 'reason', 'timeout')
