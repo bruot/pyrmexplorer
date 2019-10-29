@@ -30,6 +30,7 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QCommandLineParser, QCommandLineOption
 
 from rmexplorer.rmexplorerwindow import RmExplorerWindow
 
@@ -41,6 +42,23 @@ def resource_path(relative_path):
 
 def main(use_resources=False):
 
+    parser = QCommandLineParser()
+    geometryOpt = QCommandLineOption('geometry', 'Main window geometry', 'geometry')
+    parser.addOption(geometryOpt)
+    parser.process(sys.argv)
+    if parser.isSet('geometry'):
+        try:
+            geometry = tuple(int(val) for val in parser.value('geometry').split('x'))
+            if len(geometry) != 4:
+                raise
+            if any(val < 1 for val in geometry):
+                raise
+        except:
+            print('The --geometry argument value must have a format such as 1x1x640x320 (x, y, width, height).')
+            exit(0)
+    else:
+        geometry = None
+
     app = QApplication(sys.argv)
     app.setApplicationName('pyrMExplorer')
     app.setOrganizationName('rMTools')
@@ -51,6 +69,8 @@ def main(use_resources=False):
                                 'icon.ico')
     app.setWindowIcon(QIcon(icon_path))
     mainWindow = RmExplorerWindow()
+    if geometry:
+        mainWindow.setGeometry(*geometry)
     mainWindow.show()
     sys.exit(app.exec_())
 
