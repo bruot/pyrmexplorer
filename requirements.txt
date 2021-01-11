@@ -1,0 +1,6 @@
+PyQt5
+pycryptodomex
+paramiko
+requests
+password-strength
+Wand
