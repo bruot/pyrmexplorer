@@ -3,4 +3,5 @@
 pyinstaller/build/
 pyinstaller/dist/
 pyinstaller/rmexplorer.spec
-
+/.idea/
+/venv/
