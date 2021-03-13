@@ -141,6 +141,7 @@ def downloadFile(fid, basePath, destRelPath, mode, settings):
 
 def uploadFile(path, settings):
     """Uploads a local PDF or EPUB file to the tablet"""
+    successful_states = [200, 201]
 
     filename = os.path.split(path)[1]
     basename, ext = os.path.splitext(filename)
@@ -150,7 +151,7 @@ def uploadFile(path, settings):
                             files={'file': f},
                             timeout=settings.value('HTTPTimeout', type=int))
         status = req.status_code
-        if status != 200:
+        if status not in successful_states:
             raise UploadError('Server responded with status code %d and message: "%s"' % (status, req.text))
 
 
