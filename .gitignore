@@ -1,7 +1,8 @@
 *~
-*/__pycache__/*
-pyinstaller/build/
-pyinstaller/dist/
-pyinstaller/rmexplorer.spec
+__pycache__/
+/pyinstaller/build/
+/pyinstaller/dist/
+/pyinstaller/rmexplorer.spec
 /.idea/
 /venv/
+/venv-pyi/
