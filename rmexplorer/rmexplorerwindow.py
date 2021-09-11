@@ -307,7 +307,7 @@ class RmExplorerWindow(QMainWindow):
                                                       QFileDialog.ShowDirsOnly
                                                       | QFileDialog.DontResolveSymlinks)
             if folder:
-                self.settings.setValue('lastDir', os.path.split(folder)[0])
+                self.settings.setValue('lastDir', folder)
                 # Construct files list
                 dlList = []
                 for dir_id, dir_name in dirs:
@@ -348,7 +348,7 @@ class RmExplorerWindow(QMainWindow):
                                                       QFileDialog.ShowDirsOnly
                                                       | QFileDialog.DontResolveSymlinks)
             if folder:
-                self.settings.setValue('lastDir', os.path.split(folder)[0])
+                self.settings.setValue('lastDir', folder)
                 # Construct files list
                 dlList = tuple((id_, os.path.join(folder, '%s.%s' % (name, ext)))
                                for id_, name in files)
@@ -390,7 +390,7 @@ class RmExplorerWindow(QMainWindow):
                                          constants.StatusBarMsgDisplayDuration)
             return
 
-        self.settings.setValue('lastSSHBackupDir', os.path.split(folder)[0])
+        self.settings.setValue('lastSSHBackupDir', folder)
 
         if not self.settings.unlockMasterKeyInteractive(self):
             self.statusBar().showMessage('Cancelled.',
@@ -439,6 +439,8 @@ class RmExplorerWindow(QMainWindow):
             self.statusBar().showMessage('Cancelled.',
                                          constants.StatusBarMsgDisplayDuration)
             return
+        # Better here to set default location one level above to avoid saving
+        # later a backup inside another backup:
         self.settings.setValue('lastSSHBackupDir', os.path.split(folder)[0])
 
         # Basic check that the folder contents looks like a backup
